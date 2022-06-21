@@ -7,46 +7,47 @@ import matplotlib.pyplot as plt
 import mne
 matplotlib.use('TkAgg')
 
+# read files
 raw_path = os.path.join(os.getcwd(), 'data/raw_data', '053122_AR_BV10-20_OCTEST.vhdr')
 montage_path = os.path.join(os.getcwd(), 'data/Workspaces_Montages/active electrodes/actiCAP for LiveAmp 32 Channel','CLA-32.bvef')
 montage = mne.channels.read_custom_montage(montage_path)
-
 raw = mne.io.read_raw_brainvision(raw_path)
 raw.set_channel_types({'EOG':'eog'})
-eeg = raw.copy().pick_types(eeg=True)
 raw.set_montage(montage)
+eeg = raw.copy().pick_types(eeg=True)
+print(raw.info)
+
 fig = raw.plot_sensors(show_names=True)
 
-
-print(raw.info)
 # raw.plot(block=True)
-# raw.plot_sensors(block=True)
 raw.load_data()
-# tmin, tmax = 0, 100  # use the first 100s of data for training
-# raw.crop(tmin, tmax).load_data()
 
-
+# data preprocessing
 filt_raw = raw.copy().filter(l_freq=0.1, h_freq=None)
 filt_raw = filt_raw.notch_filter(freqs=(60, 120, 180),method='spectrum_fit',filter_length='auto',phase='zero')
 filt_raw = filt_raw.filter(None, 50, fir_design='firwin')
 
+# preprocessed raw
 filt_raw.plot(block=True)
 filt_raw.plot_psd(fmax=250,average=True)
+
+# eye open psd
 filt_raw.copy().crop(0, 100).plot_psd(fmax=50,average=True)
+# eye closed psd
 filt_raw.copy().crop(140, 240).plot_psd(fmax=50,average=True)
 
+# TODO: plot psd with topomap
+# TODO: plot spectrogram at the eye closing and opneing moments
+# TODO: save plots
 
-
-############### Physiologicraw.plot_sensors(block=True)al signal detection and correction via ICA ###############  
-###############  Artifact detection
 # create EOG epoch for correction
 eog_epochs = mne.preprocessing.create_eog_epochs(filt_raw, ch_name='EOG', baseline=(-0.5, -0.3))
 # eog_epochs = mne.preprocessing.create_eog_epochs(filt_raw, ch_name='EOG', tmin=-0.3,tmax=0.3, l_freq=1, h_freq=5, baseline=(-0.3, 0))
 eog_epochs.plot_image(combine='mean')
 # applying EOG baseline correction (mode: mean)
 eog_epochs.average().plot_image()
-print(filt_raw.info)
-###############  Perform ICA and artifact correction
+# print(filt_raw.info)
+
 # create evoked EOG from created epoch for correction
 eog_evoked = mne.preprocessing.create_eog_epochs(filt_raw, ch_name='EOG',baseline=(-0.5, -0.2)).average()
 # create evoked ECG from created epoch for correction
