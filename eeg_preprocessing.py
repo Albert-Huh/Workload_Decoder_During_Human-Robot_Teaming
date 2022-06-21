@@ -14,7 +14,6 @@ montage = mne.channels.read_custom_montage(montage_path)
 raw = mne.io.read_raw_brainvision(raw_path)
 raw.set_channel_types({'EOG':'eog'})
 raw.set_montage(montage)
-eeg = raw.copy().pick_types(eeg=True)
 print(raw.info)
 
 fig = raw.plot_sensors(show_names=True)
@@ -23,7 +22,7 @@ fig = raw.plot_sensors(show_names=True)
 raw.load_data()
 
 # data preprocessing
-filt_raw = raw.copy().filter(l_freq=0.1, h_freq=None)
+filt_raw = raw.copy().filter(l_freq=1, h_freq=None)
 filt_raw = filt_raw.notch_filter(freqs=(60, 120, 180),method='spectrum_fit',filter_length='auto',phase='zero')
 filt_raw = filt_raw.filter(None, 50, fir_design='firwin')
 
@@ -35,6 +34,7 @@ filt_raw.plot_psd(fmax=250,average=True)
 filt_raw.copy().crop(0, 100).plot_psd(fmax=50,average=True)
 # eye closed psd
 filt_raw.copy().crop(140, 240).plot_psd(fmax=50,average=True)
+eeg = filt_raw.copy().pick_types(eeg=True)
 
 # TODO: plot psd with topomap
 # TODO: plot spectrogram at the eye closing and opneing moments
@@ -52,23 +52,22 @@ eog_epochs.average().plot_image()
 eog_evoked = mne.preprocessing.create_eog_epochs(filt_raw, ch_name='EOG',baseline=(-0.5, -0.2)).average()
 # create evoked ECG from created epoch for correction
 # setup ICA
-ica = mne.preprocessing.ICA(n_components=10, random_state=50,max_iter= 'auto') #50n 70
+ica = mne.preprocessing.ICA(n_components=7, random_state=50,max_iter= 'auto') #50n 70
 # fit ICA to preconditioned raw data
 ica.fit(filt_raw)
 # load raw data into memory for artifact detection
 filt_raw.load_data()
 # manual inspection of IC
 
-
 ica.plot_components()
 ica.plot_sources(filt_raw)
 plt.show()
-ica.exclude = [0, 5]
-ica.plot_properties(filt_raw, picks=ica.exclude)
+# ica.exclude = [0,1,2,3,4,5,6]
+# ica.plot_properties(filt_raw, picks=ica.exclude)
 # Using EOG ch to select IC components for rejection
-ica.exclude = []
+ica.exclude = [0]
 # find which ICs match the EOG pattern
-eog_indices, eog_scores = ica.find_bads_eog(filt_raw)
+eog_indices, eog_scores = ica.find_bads_eog(filt_raw, threshold=0.8)
 ica.exclude = eog_indices
 
 # barplot of ICA component "EOG match" scores
@@ -100,12 +99,22 @@ if plot_fig == True:
 ica.exclude = []
 ica.exclude = eog_indices + ecg_indices
 # blinks + heart beat artifact detection validation
-if plot_fig == True:
-    ica.plot_overlay(raw, exclude=ica.exclude, picks=eeg_channels)
-# create a copy of raw
-orig_raw = raw.copy()
-# apply ICA to filt_raw
-ica.apply(raw)
-raw.filter(l_freq=0.1, h_freq=None)
-raw.filter(None, 50., fir_design='firwin')
 '''
+
+ica.apply(filt_raw)
+# ica.plot_overlay(filt_raw, exclude=ica.exclude, picks=eeg)
+filt_raw.plot(block=True)
+
+freqs = np.logspace(*np.log10([6, 15]), num=8)
+n_cycles = freqs / 2.  # different number of cycle per frequency
+# TODO: define ec eo epochs
+power, itc = mne.time_frequency.tfr_morlet(epochs, freqs=freqs, n_cycles=n_cycles, use_fft=True,
+                        return_itc=True, decim=3, n_jobs=1)
+power.plot_joint(baseline=(-0.5, 0), mode='mean', tmin=-.5, tmax=2,
+                 timefreqs=[(.5, 10), (1.3, 8)])
+# # create a copy of raw
+# orig_raw = raw.copy()
+# # apply ICA to filt_raw
+# ica.apply(raw)
+# raw.filter(l_freq=0.1, h_freq=None)
+# raw.filter(None, 50., fir_design='firwin')
