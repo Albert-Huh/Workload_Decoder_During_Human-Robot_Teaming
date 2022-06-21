@@ -8,13 +8,19 @@ import mne
 matplotlib.use('TkAgg')
 
 raw_path = os.path.join(os.getcwd(), 'data/raw_data', '053122_AR_BV10-20_OCTEST.vhdr')
-print(raw_path)
+montage_path = os.path.join(os.getcwd(), 'data/Workspaces_Montages/active electrodes/actiCAP for LiveAmp 32 Channel','CLA-32.bvef')
+montage = mne.channels.read_custom_montage(montage_path)
+
 raw = mne.io.read_raw_brainvision(raw_path)
 raw.set_channel_types({'EOG':'eog'})
 eeg = raw.copy().pick_types(eeg=True)
+raw.set_montage(montage)
+fig = raw.plot_sensors(show_names=True)
+
+
 print(raw.info)
 # raw.plot(block=True)
-# raw.plot_sensors()
+# raw.plot_sensors(block=True)
 raw.load_data()
 # tmin, tmax = 0, 100  # use the first 100s of data for training
 # raw.crop(tmin, tmax).load_data()
@@ -28,6 +34,7 @@ filt_raw.plot(block=True)
 filt_raw.plot_psd(fmax=250,average=True)
 filt_raw.copy().crop(0, 100).plot_psd(fmax=50,average=True)
 filt_raw.copy().crop(140, 240).plot_psd(fmax=50,average=True)
+
 
 '''
 ############### Physiological signal detection and correction via ICA ###############  
