@@ -36,8 +36,8 @@ filt_raw.copy().crop(0, 100).plot_psd(fmax=50,average=True)
 filt_raw.copy().crop(140, 240).plot_psd(fmax=50,average=True)
 
 
-'''
-############### Physiological signal detection and correction via ICA ###############  
+
+############### Physiologicraw.plot_sensors(block=True)al signal detection and correction via ICA ###############  
 ###############  Artifact detection
 # create EOG epoch for correction
 eog_epochs = mne.preprocessing.create_eog_epochs(filt_raw, ch_name='EOG', baseline=(-0.5, -0.3))
@@ -80,6 +80,7 @@ plt.show()
 # plot ICs applied to the averaged EOG epochs, with EOG matches highlighted
 ica.plot_sources(eog_evoked)
 plt.show()
+'''
 # find which ICs match the ECG pattern
 ica.exclude = []
 ecg_indices, ecg_scores = ica.find_bads_ecg(raw, method='correlation',
