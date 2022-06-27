@@ -14,11 +14,30 @@ montage = mne.channels.read_custom_montage(montage_path)
 raw = mne.io.read_raw_brainvision(raw_path)
 raw.set_channel_types({'EOG':'eog'})
 raw.set_montage(montage)
-print(raw.info)
-
 fig = raw.plot_sensors(show_names=True)
 
-# raw.plot(block=True)
+raw.plot(block=True)
+
+# annot. to event
+print(raw.info)
+print(raw.annotations.onset)
+print(raw.annotations.duration)
+print(raw.annotations.description)
+
+events_from_annot, event_dict = mne.events_from_annotations(raw)
+print(event_dict)
+print(events_from_annot)
+
+custom_mapping = {'New Segment/': 5, 'Comment/eyeclosed': 1, 'Comment/eyeopen': 2}
+(events_from_annot,
+ event_dict) = mne.events_from_annotations(raw, event_id=custom_mapping)
+print(event_dict)
+print(events_from_annot)
+
+# event visiualization
+fig = mne.viz.plot_events(events_from_annot, event_id=event_dict, sfreq=raw.info['sfreq'], first_samp=raw.first_samp)
+
+
 raw.load_data()
 
 # data preprocessing
@@ -52,7 +71,7 @@ eog_epochs.average().plot_image()
 eog_evoked = mne.preprocessing.create_eog_epochs(filt_raw, ch_name='EOG',baseline=(-0.5, -0.2)).average()
 # create evoked ECG from created epoch for correction
 # setup ICA
-ica = mne.preprocessing.ICA(n_components=7, random_state=50,max_iter= 'auto') #50n 70
+ica = mne.preprocessing.ICA(n_components=8, random_state=60,max_iter= 'auto') #50n 70
 # fit ICA to preconditioned raw data
 ica.fit(filt_raw)
 # load raw data into memory for artifact detection
@@ -62,10 +81,10 @@ filt_raw.load_data()
 ica.plot_components()
 ica.plot_sources(filt_raw)
 plt.show()
-# ica.exclude = [0,1,2,3,4,5,6]
-# ica.plot_properties(filt_raw, picks=ica.exclude)
+ica.exclude = [0,1,2,3,4,5,6,7]
+ica.plot_properties(filt_raw, picks=ica.exclude)
 # Using EOG ch to select IC components for rejection
-ica.exclude = [0]
+ica.exclude = [0],2
 # find which ICs match the EOG pattern
 eog_indices, eog_scores = ica.find_bads_eog(filt_raw, threshold=0.8)
 ica.exclude = eog_indices
@@ -105,13 +124,17 @@ ica.apply(filt_raw)
 # ica.plot_overlay(filt_raw, exclude=ica.exclude, picks=eeg)
 filt_raw.plot(block=True)
 
+closing = mne.Epochs(filt_raw, baseline = (118, 222))
+opening = mne.Epochs(filt_raw, baseline = (238, 242))
 freqs = np.logspace(*np.log10([6, 15]), num=8)
 n_cycles = freqs / 2.  # different number of cycle per frequency
 # TODO: define ec eo epochs
-power, itc = mne.time_frequency.tfr_morlet(epochs, freqs=freqs, n_cycles=n_cycles, use_fft=True,
+
+
+power, itc = mne.time_frequency.tfr_morlet(closing, freqs=freqs, n_cycles=n_cycles, use_fft=True,
                         return_itc=True, decim=3, n_jobs=1)
-power.plot_joint(baseline=(-0.5, 0), mode='mean', tmin=-.5, tmax=2,
-                 timefreqs=[(.5, 10), (1.3, 8)])
+power.plot(['Fp1'], baseline=(-0.5, 0), mode='logratio', title=power.ch_names['Fp1'])
+# power.plot_joint(mode='mean',timefreqs=[(.5, 10), (1.3, 8)])
 # # create a copy of raw
 # orig_raw = raw.copy()
 # # apply ICA to filt_raw
