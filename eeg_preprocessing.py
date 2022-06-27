@@ -37,11 +37,10 @@ print(events_from_annot)
 # event visiualization
 fig = mne.viz.plot_events(events_from_annot, event_id=event_dict, sfreq=raw.info['sfreq'], first_samp=raw.first_samp)
 
-
 raw.load_data()
 
 # data preprocessing
-filt_raw = raw.copy().filter(l_freq=1, h_freq=None)
+filt_raw = raw.copy().filter(l_freq=1, h_freq=None, picks=['eeg','eog'] )
 filt_raw = filt_raw.notch_filter(freqs=(60, 120, 180),method='spectrum_fit',filter_length='auto',phase='zero')
 filt_raw = filt_raw.filter(None, 50, fir_design='firwin')
 
@@ -55,9 +54,7 @@ filt_raw.copy().crop(0, 100).plot_psd(fmax=50,average=True)
 filt_raw.copy().crop(140, 240).plot_psd(fmax=50,average=True)
 eeg = filt_raw.copy().pick_types(eeg=True)
 
-# TODO: plot psd with topomap
-# TODO: plot spectrogram at the eye closing and opneing moments
-# TODO: save plots
+# TODO: pub quality figures
 
 # create EOG epoch for correction
 eog_epochs = mne.preprocessing.create_eog_epochs(filt_raw, ch_name='EOG', baseline=(-0.5, -0.3))
@@ -124,16 +121,37 @@ ica.apply(filt_raw)
 # ica.plot_overlay(filt_raw, exclude=ica.exclude, picks=eeg)
 filt_raw.plot(block=True)
 
-closing = mne.Epochs(filt_raw, baseline = (118, 222))
-opening = mne.Epochs(filt_raw, baseline = (238, 242))
-freqs = np.logspace(*np.log10([6, 15]), num=8)
+# create Epochs
+# define rejection dictionary to reject abnormal pick-to-pick epoch later
+# (There is a auto reject package I can use to automize this process)
+# reject_criteria = dict(eeg=150e-6,       # 150 µV
+#                        eog=250e-6)       # 250 µV
+# create EEG epochs
+epochs = mne.Epochs(filt_raw, events_from_annot, event_id=event_dict, tmin=-10.0, tmax=10.0, preload=True, picks=['eeg','eog'])
+epoch_eye_closed = epochs['Comment/eyeclosed']
+epoch_eye_open = epochs['Comment/eyeopen']
+
+freqs = np.logspace(*np.log10([5, 18]), num=50)
 n_cycles = freqs / 2.  # different number of cycle per frequency
-# TODO: define ec eo epochs
+power, itc = mne.time_frequency.tfr_morlet(epoch_eye_closed, freqs=freqs, n_cycles=n_cycles, use_fft=True, return_itc=True, decim=1, n_jobs=1, picks='eeg')
+print(power)
+power.plot([0], baseline=(-5.0, 0), mode='logratio', title=power.ch_names[0])
+power.plot([10], baseline=(-5.0, 0), mode='logratio', title=power.ch_names[10])
+fig, axis = plt.subplots(1, 2, figsize=(7, 4))
+power.plot_topomap(ch_type='eeg', tmin=-10, tmax=-2, fmin=8, fmax=13, baseline=(-5.0, 0), mode='logratio', axes=axis[0], title='Eye-Open Alpha (8-13 Hz)', show=False)
+power.plot_topomap(ch_type='eeg', tmin=2, tmax=10, fmin=8, fmax=13, baseline=(-5.0, 0), mode='logratio', axes=axis[1], title='Eye-Closed Alpha (8-13 Hz)', show=False)
+mne.viz.tight_layout()
+plt.show()
 
-
-power, itc = mne.time_frequency.tfr_morlet(closing, freqs=freqs, n_cycles=n_cycles, use_fft=True,
-                        return_itc=True, decim=3, n_jobs=1)
-power.plot(['Fp1'], baseline=(-0.5, 0), mode='logratio', title=power.ch_names['Fp1'])
+power, itc = mne.time_frequency.tfr_morlet(epoch_eye_open, freqs=freqs, n_cycles=n_cycles, use_fft=True, return_itc=True, decim=1, n_jobs=1, picks='eeg')
+print(power)
+power.plot([0], baseline=(-5.0, 0), mode='logratio', title=power.ch_names[0])
+power.plot([10], baseline=(-5.0, 0), mode='logratio', title=power.ch_names[10])
+fig, axis = plt.subplots(1, 2, figsize=(7, 4))
+power.plot_topomap(ch_type='eeg', tmin=-10, tmax=-2, fmin=8, fmax=13, baseline=(-5.0, 0), mode='logratio', axes=axis[0], title='Eye-Closed Alpha (8-13 Hz)', show=False)
+power.plot_topomap(ch_type='eeg', tmin=2, tmax=10, fmin=8, fmax=13, baseline=(-5.0, 0), mode='logratio', axes=axis[1], title='Eye-Open Alpha (8-13 Hz)', show=False)
+mne.viz.tight_layout()
+plt.show()
 # power.plot_joint(mode='mean',timefreqs=[(.5, 10), (1.3, 8)])
 # # create a copy of raw
 # orig_raw = raw.copy()
@@ -141,3 +159,4 @@ power.plot(['Fp1'], baseline=(-0.5, 0), mode='logratio', title=power.ch_names['F
 # ica.apply(raw)
 # raw.filter(l_freq=0.1, h_freq=None)
 # raw.filter(None, 50., fir_design='firwin')
+
