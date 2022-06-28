@@ -19,6 +19,7 @@ fig = raw.plot_sensors(show_names=True)
 raw.plot(block=True)
 
 # annot. to event
+print(raw.info['nchan'])
 print(raw.info)
 print(raw.annotations.onset)
 print(raw.annotations.duration)
