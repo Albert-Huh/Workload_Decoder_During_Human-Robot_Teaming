@@ -1,4 +1,5 @@
-import os
+from errno import ECHRNG
+import sys
 import random
 import matplotlib
 import matplotlib.pyplot as plt
@@ -75,16 +76,49 @@ class Filtering:
         return filt_raw
     
 class Indepndent_Component_Analysis:
-    def __init__(self,raw, n_components=None,seed=random.randint(1,100), max_iter= 'auto'):
-        if n_components == None:
-            n_components = raw.info['nchan']
-        self.ica = mne.preprocessing.ICA(n_components=n_components, random_state=seed,max_iter= max_iter)
-        self.ica.fit(raw) #whitening and n-comps ICA performed
-    
+    def __init__(self,raw, n_components=None,seed=random.randint(1,100), max_iter='auto', find_eog_peaks=True,find_ecg_peaks=False):
+        self.raw = raw
+        self.n_components = raw.info['nchan']-1 if n_components==None else n_components
+        self.random_state = seed
+        self.max_iter = max_iter
+        self.find_eog_peaks = find_eog_peaks
+        self.find_ecg_peaks = find_ecg_peaks    
+        self.ica = mne.preprocessing.ICA(n_components=n_components, random_state = seed,max_iter= max_iter)
+
+    def setup_ICA(self):
+        self.ica.fit(self.raw) # whitening and n-comps ICA performed
+        
     def visuallize_ICA_components(self):
         self.ica.plot_components
         plt.show()
+        self.ica.plot_sources(self.raw)
+        # col = self.n_components if self.n_components < 4 else 4
+        # row = 1 if self.n_components < 4 else self.n_components // 4 +1
+        # fig, axis = plt.subplots(row, col)
+        ica_picks = list(np.arange(0,self.n_components-1,1))
+        self.plot_properties(self.raw, picks=ica_picks)
 
+    def exclude_ica(self, list_exclude):
+        self.ica.exclude = list_exclude
     
-    pass
+    def create_physsiological_evoked(self, baseline=(-0.5, -0.2), verbose='warning'):
+        if self.find_eog_peaks == True:
+            eog_evoked = mne.preprocessing.create_eog_epochs(self.raw, picks='eeg', baseline=baseline, verbose=verbose).average()
+        else:
+            eog_evoked = None
 
+        if self.find_ecg_peaks == True:
+            ecg_evoked = mne.preprocessing.create_ecg_epochs(self.raw, picks='eeg', baseline=baseline, verbose=verbose).average()
+        else:
+            ecg_evoked = None
+        return eog_evoked, ecg_evoked
+
+    def find_physiological_artifacts(self, eog_treshold=0.8, ecg_treshold='auto', reject_by_annotation=True, measure='correlation', verbose='warning'):
+        if self.find_eog_peaks == True:
+            eog_indices, eog_scores = self.ica.find_bads_eog(self.raw, threshold=eog_treshold)
+
+eog_params
+ch_name=None, threshold=3.0, start=None, stop=None, l_freq=1, h_freq=10, reject_by_annotation=True, measure='zscore', verbose=None
+
+ecg_params
+ch_name=None, threshold='auto', start=None, stop=None, l_freq=8, h_freq=16, method='ctps', reject_by_annotation=True, measure='zscore', verbose=None
