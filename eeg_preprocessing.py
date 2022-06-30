@@ -1,3 +1,4 @@
+import sys
 import os
 from sqlite3 import Row
 import numpy as np
@@ -66,7 +67,7 @@ eog_epochs.average().plot_image()
 # print(filt_raw.info)
 
 # create evoked EOG from created epoch for correction
-eog_evoked = mne.preprocessing.create_eog_epochs(filt_raw, ch_name='EOG',baseline=(-0.5, -0.2)).average()
+eog_evoked = mne.preprocessing.create_eog_epochs(filt_raw, ch_name='EOG', picks='eeg',baseline=(-0.5, -0.2)).average()
 # create evoked ECG from created epoch for correction
 # setup ICA
 ica = mne.preprocessing.ICA(n_components=8, random_state=60,max_iter= 'auto') #50n 70
@@ -74,15 +75,24 @@ ica = mne.preprocessing.ICA(n_components=8, random_state=60,max_iter= 'auto') #5
 ica.fit(filt_raw)
 # load raw data into memory for artifact detection
 filt_raw.load_data()
-# manual inspection of IC
 
+# create evoked EOG from created epoch for correction
+eog_evoked = mne.preprocessing.create_eog_epochs(filt_raw, baseline=(-0.5, -0.2)).average()
+# create evoked ECG from created epoch for correction
+# ecg_evoked = mne.preprocessing.create_ecg_epochs(filt_raw, picks='eeg',baseline=(-0.5, -0.2)).average() # cannot creat ecg_evoked without ECG ch. Virtual ch only can be constructed using MEG
+eog_epochs.average().plot_joint()
+eog_evoked.plot_joint()
+eog_evoked.plot_image()
+# ecg_evoked.plot_joint()
+sys.exit()
+# manual inspection of IC
 ica.plot_components()
 ica.plot_sources(filt_raw)
 plt.show()
 ica.exclude = [0,1,2,3,4,5,6,7]
 ica.plot_properties(filt_raw, picks=ica.exclude)
 # Using EOG ch to select IC components for rejection
-ica.exclude = [0],2
+ica.exclude = [0]
 # find which ICs match the EOG pattern
 eog_indices, eog_scores = ica.find_bads_eog(filt_raw, threshold=0.8)
 ica.exclude = eog_indices
