@@ -84,7 +84,7 @@ eog_epochs.average().plot_joint()
 eog_evoked.plot_joint()
 eog_evoked.plot_image()
 # ecg_evoked.plot_joint()
-sys.exit()
+# sys.exit()
 # manual inspection of IC
 ica.plot_components()
 ica.plot_sources(filt_raw)
