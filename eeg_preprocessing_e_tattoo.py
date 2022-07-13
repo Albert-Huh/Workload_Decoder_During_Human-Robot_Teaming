@@ -9,10 +9,11 @@ import mne
 matplotlib.use('TkAgg')
 
 # read files
-raw_path = os.path.join(os.getcwd(), 'data/raw_data', '063022_Eye_OC_Test_AR_AM_1_test.vhdr')
+raw_path = os.path.join(os.getcwd(), 'data/raw_data', '071322_Eye_OC_Test_MJ_AM_1.vhdr')
 montage_path = os.path.join(os.getcwd(), 'data/Workspaces_Montages/active electrodes/actiCAP for LiveAmp 32 Channel','CLA-32.bvef')
 raw = mne.io.read_raw_brainvision(raw_path)
 raw.set_channel_types({'EOG':'eog'})
+# raw.annotations.onset[:] = [0, 60.371, 120.59]
 # raw.annotations.onset[:] = [0, 30.854, 59.998, 90, 119.9, 149.42, 180.9] # 063022_Eye_OC_Test_AR_AM_1_test.vhdr
 print(raw.info)
 # raw.plot(block=True)
@@ -60,10 +61,10 @@ et_filt_raw = et_filt_raw.filter(None, 50, fir_design='firwin',picks=['eeg','eog
 bv_filt_raw.plot(block=True)
 et_filt_raw.plot(block=True)
 
-# # eye open psd
-bv_filt_raw.copy().crop(79, 89).plot_psd(fmax=50,average=True)
-# # eye closed psd
-bv_filt_raw.copy().crop(91, 101).plot_psd(fmax=50,average=True)
+# # # eye open psd
+# bv_filt_raw.copy().crop(79, 89).plot_psd(fmax=50,average=True)
+# # # eye closed psd
+# bv_filt_raw.copy().crop(91, 101).plot_psd(fmax=50,average=True)
 # eeg = bv_filt_raw.copy().pick_types(eeg=True)
 
 # TODO: pub quality figures
@@ -82,8 +83,8 @@ et_eog_evoked = mne.preprocessing.create_eog_epochs(et_filt_raw, ch_name='EOG', 
 
 # create evoked ECG from created epoch for correction
 # setup ICA
-bv_ica = mne.preprocessing.ICA(n_components=8, random_state=80,max_iter= 'auto') #50n 70
-et_ica = mne.preprocessing.ICA(n_components=4, random_state=60,max_iter= 'auto') #50n 70
+bv_ica = mne.preprocessing.ICA(n_components=8, random_state=50,max_iter= 'auto') #8n 80
+et_ica = mne.preprocessing.ICA(n_components=4, random_state=30,max_iter= 'auto') #4n 60
 
 # fit ICA to preconditioned raw data
 bv_ica.fit(bv_filt_raw)
@@ -189,11 +190,11 @@ fig = mne.viz.plot_events(events_from_annot, event_id=event_dict, sfreq=raw.info
 
 
 # create EEG epochs
-bv_epochs = mne.Epochs(bv_filt_raw, events_from_annot, event_id=event_dict, tmin=-5.0, tmax=5.0, preload=True, picks=['eeg','eog'])
+bv_epochs = mne.Epochs(bv_filt_raw, events_from_annot, event_id=event_dict, tmin=-10.0, tmax=10.0, preload=True, picks=['eeg','eog'])
 bv_epoch_eye_closed = bv_epochs['Comment/Eye_Closed']
 bv_epoch_eye_open = bv_epochs['Comment/Eye_Open']
 
-et_epochs = mne.Epochs(et_filt_raw, events_from_annot, event_id=event_dict, tmin=-5.0, tmax=5.0, preload=True, picks=['eeg','eog'])
+et_epochs = mne.Epochs(et_filt_raw, events_from_annot, event_id=event_dict, tmin=-10.0, tmax=10.0, preload=True, picks=['eeg','eog'])
 et_epoch_eye_closed = et_epochs['Comment/Eye_Closed']
 et_epoch_eye_open = et_epochs['Comment/Eye_Open']
 
@@ -201,45 +202,46 @@ freqs = np.logspace(*np.log10([1, 50]), num=160)
 n_cycles = freqs / 2.  # different number of cycle per frequency
 # cnorm = matplotlib.colors.TwoSlopeNorm(vmin=-1, vcenter=0, vmax=3)
 # cmap=cnorm
+# baseline=(-5.0, -1.0)
 power, itc = mne.time_frequency.tfr_morlet(bv_epoch_eye_closed, freqs=freqs, n_cycles=n_cycles, use_fft=True, return_itc=True, decim=1, n_jobs=1, picks='eeg')
-power.plot(baseline=(-5.0, -1.0), combine='mean', mode='logratio', title='BV Closing Epoch Average Power')
+power.plot(baseline=(-10.0, -1.0), combine='mean', mode='logratio', title='BV Closing Epoch Average Power')
 print(power.data)
 print(np.nanmax(power.data))
 fig, axis = plt.subplots(1, 2, figsize=(7, 4))
 cnorm = matplotlib.colors.TwoSlopeNorm(vmin=-0.275, vcenter=0, vmax=0.275)
-power.plot_topomap(ch_type='eeg', tmin=-5, tmax=-1, fmin=8, fmax=13, baseline=(-5.0, -1.0), mode='logratio', axes=axis[0], title='Eye-Open Alpha (8-13 Hz)', show=False)
-power.plot_topomap(ch_type='eeg', tmin=1, tmax=5, fmin=8, fmax=13, baseline=(-5.0, -1.0), mode='logratio', axes=axis[1], title='Eye-Closed Alpha (8-13 Hz)', show=False)
+power.plot_topomap(ch_type='eeg', tmin=-10, tmax=-1, fmin=8, fmax=13, baseline=(-10.0, -1.0), mode='logratio', axes=axis[0], title='Eye-Open Alpha (8-13 Hz)', show=False)
+power.plot_topomap(ch_type='eeg', tmin=1, tmax=10, fmin=8, fmax=13, baseline=(-10.0, -1.0), mode='logratio', axes=axis[1], title='Eye-Closed Alpha (8-13 Hz)', show=False)
 mne.viz.tight_layout()
 plt.show()
 
 power, itc = mne.time_frequency.tfr_morlet(bv_epoch_eye_open, freqs=freqs, n_cycles=n_cycles, use_fft=True, return_itc=True, decim=1, n_jobs=1, picks='eeg')
-power.plot(baseline=(-5.0, -1.0), combine='mean', mode='logratio', title='BV Opening Epoch Average Power')
+power.plot(baseline=(-10.0, -1.0), combine='mean', mode='logratio', title='BV Opening Epoch Average Power')
 # power.plot([1], baseline=(-5.0, 0), mode='logratio', title=power.ch_names[1])
 fig, axis = plt.subplots(1, 2, figsize=(7, 4))
 cnorm = matplotlib.colors.TwoSlopeNorm(vmin=-0.225, vcenter=-0.1, vmax=0.025)
-power.plot_topomap(ch_type='eeg', tmin=-5, tmax=-1, fmin=8, fmax=13, baseline=(-5.0, -1.0), mode='logratio', axes=axis[0], title='Eye-Closed Alpha (8-13 Hz)', show=False)
-power.plot_topomap(ch_type='eeg', tmin=1, tmax=5, fmin=8, fmax=13, baseline=(-5.0, -1.0), mode='logratio', axes=axis[1], title='Eye-Open Alpha (8-13 Hz)', show=False)
+power.plot_topomap(ch_type='eeg', tmin=-10, tmax=-1, fmin=8, fmax=13, baseline=(-10.0, -1.0), mode='logratio', axes=axis[0], title='Eye-Closed Alpha (8-13 Hz)', show=False)
+power.plot_topomap(ch_type='eeg', tmin=1, tmax=10, fmin=8, fmax=13, baseline=(-10.0, -1.0), mode='logratio', axes=axis[1], title='Eye-Open Alpha (8-13 Hz)', show=False)
 mne.viz.tight_layout()
 plt.show()
 
 # closing_epoch
 power, itc = mne.time_frequency.tfr_morlet(et_epoch_eye_closed, freqs=freqs, n_cycles=n_cycles, use_fft=True, return_itc=True, decim=1, n_jobs=1, picks='eeg')
-power.plot([2,3,4,5],baseline=(-5.0, -1.0), combine='mean', mode='logratio', title='ET Closing Epoch Average Power')
+power.plot([2,3,4,5],baseline=(-10.0, -1.0), combine='mean', mode='logratio', title='ET Closing Epoch Average Power')
 
 fig, axis = plt.subplots(1, 2, figsize=(7, 4))
 cnorm = matplotlib.colors.TwoSlopeNorm(vmin=-0.2, vcenter=-0.05, vmax=0.1)
-power.plot_topomap(ch_type='eeg', tmin=-5, tmax=-1, fmin=8, fmax=13, baseline=(-5.0, -1.0), mode='logratio', axes=axis[0], title='Eye-Open Alpha (8-13 Hz)', show=False)
-power.plot_topomap(ch_type='eeg', tmin=1, tmax=5, fmin=8, fmax=13, baseline=(-5.0, -1.0), mode='logratio', axes=axis[1], title='Eye-Closed Alpha (8-13 Hz)', show=False)
+power.plot_topomap(ch_type='eeg', tmin=-10, tmax=-1, fmin=8, fmax=13, baseline=(-10.0, -1.0), mode='logratio', axes=axis[0], title='Eye-Open Alpha (8-13 Hz)', show=False)
+power.plot_topomap(ch_type='eeg', tmin=1, tmax=10, fmin=8, fmax=13, baseline=(-10.0, -1.0), mode='logratio', axes=axis[1], title='Eye-Closed Alpha (8-13 Hz)', show=False)
 mne.viz.tight_layout()
 plt.show()
 
 power, itc = mne.time_frequency.tfr_morlet(et_epoch_eye_open, freqs=freqs, n_cycles=n_cycles, use_fft=True, return_itc=True, decim=1, n_jobs=1, picks='eeg')
-power.plot([2,3,4,5],baseline=(-5.0, -1.0), combine='mean', mode='logratio', title='ET Opening Epoch Average Power')
+power.plot([2,3,4,5],baseline=(-10.0, -1.0), combine='mean', mode='logratio', title='ET Opening Epoch Average Power')
 # power.plot([3], baseline=(-5.0, 0), mode='logratio', title=power.ch_names[3])
 fig, axis = plt.subplots(1, 2, figsize=(7, 4))
 cnorm = matplotlib.colors.TwoSlopeNorm(vmin=-0.275, vcenter=-0.1875, vmax=-0.1)
-power.plot_topomap(ch_type='eeg', tmin=-5, tmax=-1, fmin=8, fmax=13, baseline=(-5.0, -1.0), mode='logratio', axes=axis[0], title='Eye-Closed Alpha (8-13 Hz)', show=False)
-power.plot_topomap(ch_type='eeg', tmin=1, tmax=5, fmin=8, fmax=13, baseline=(-5.0, -1.0), mode='logratio', axes=axis[1], title='Eye-Open Alpha (8-13 Hz)', show=False)
+power.plot_topomap(ch_type='eeg', tmin=-10, tmax=-1, fmin=8, fmax=13, baseline=(-10.0, -1.0), mode='logratio', axes=axis[0], title='Eye-Closed Alpha (8-13 Hz)', show=False)
+power.plot_topomap(ch_type='eeg', tmin=1, tmax=10, fmin=8, fmax=13, baseline=(-10.0, -1.0), mode='logratio', axes=axis[1], title='Eye-Open Alpha (8-13 Hz)', show=False)
 mne.viz.tight_layout()
 plt.show()
 
