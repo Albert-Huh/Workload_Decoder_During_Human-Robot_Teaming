@@ -13,9 +13,10 @@ raw_path = os.path.join(os.getcwd(), 'data/raw_data', '070622_Eye_OC_Test_CG_AM_
 montage_path = os.path.join(os.getcwd(), 'data/Workspaces_Montages/active electrodes/actiCAP for LiveAmp 32 Channel','CLA-32.bvef')
 raw = mne.io.read_raw_brainvision(raw_path)
 raw.set_channel_types({'EOG':'eog'})
+print(raw.annotations.onset)
 # raw.annotations.onset[:] = [0, 60.371, 120.59]
 # raw.annotations.onset[:] = [0, 30.854, 59.998, 90, 119.9, 149.42, 180.9] # 063022_Eye_OC_Test_AR_AM_1_test.vhdr
-print(raw.info)
+print(raw.info['meas_date'])
 # raw.plot(block=True)
 
 # raw.set_eeg_reference(ref_channels=['A1', 'A2']) #channels are missing
