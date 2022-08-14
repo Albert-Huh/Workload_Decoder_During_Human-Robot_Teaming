@@ -20,7 +20,7 @@ print(raw.info['meas_date'])
 # raw.plot(block=True)
 
 # raw.set_eeg_reference(ref_channels=['A1', 'A2']) #channels are missing
-
+# raw.plot(block=True)
 bv_raw = raw.copy().pick_channels(['Fp1','Fp2','Fz','F3','F4','F7','F8','Cz','C3','C4','T7','T8','Pz','P3','P4','P7','P8','O1','O2','EOG'])
 bv_raw.load_data()
 bv_raw.set_eeg_reference('average')
