@@ -45,7 +45,6 @@ fig = bv_raw.plot_sensors(show_names=True)
 et_montage = montage.copy()
 fig = et_raw.plot_sensors(show_names=True)
 
-
 # data preprocessing
 bv_filt_raw = bv_raw.copy().filter(l_freq=1, h_freq=None, picks=['eeg','eog'] )
 bv_filt_raw = bv_filt_raw.notch_filter(freqs=(60, 120, 180),method='spectrum_fit',filter_length='auto',phase='zero',picks=['eeg','eog'])

@@ -13,7 +13,7 @@ raw = mne.io.read_raw_brainvision(raw_path)
 # Interactively annotate
 fig = raw.plot(block=True)
 fig.fake_keypress('a')  # Simulates user pressing 'a' on the keyboard.
-
+fig = raw.plot(block=True)
 # Save annotated raw
 raw.save('70622_Dual_Nback_Test_CG_AM_1_raw.fif', overwrite=True)
 

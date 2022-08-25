@@ -14,9 +14,25 @@ class Setup:
     def __init__(self, raw_path=None, montage_path=None, mode=None):
         self.raw = mne.io.read_raw_brainvision(raw_path)
         self.montage = mne.channels.read_custom_montage(montage_path)
-        self.mode = mode # 'BV','BV10-20', 'ET', 'Dual'
+        self.mode = mode # 'Normal' 'Dual'
         self.raw.set_channel_types({'EOG':'eog'})
-        self.raw.set_montage(self.montage)
+        if mode == 'Dual':
+            self.bv_raw = self.raw.copy().pick_channels(['Fp1','Fp2','Fz','F3','F4','F7','F8','Cz','C3','C4','T7','T8','Pz','P3','P4','P7','P8','O1','O2','EOG'])
+            self.et_raw = self.raw.copy().pick_channels(['Fp1_ET','Fp2_ET','F7_ET','F8_ET','A1','A2','EOG'])
+            new_names = dict(
+                (ch_name,
+                ch_name.replace('_ET', ''))
+                for ch_name in self.et_raw.ch_names)
+            self.et_raw.rename_channels(new_names)
+
+            self.bv_raw.set_montage(self.montage)
+            fig = self.bv_raw.plot_sensors(show_names=True)
+            # et_montage = self.montage.copy()
+            # self.et_raw.set_montage(et_montage)
+            fig = self.et_raw.plot_sensors(show_names=True, block=True)
+        else:
+            self.raw.set_montage(self.montage)
+            # pass
 
     def get_annotation_info(self):
         onset = self.raw.annotations.onset
@@ -27,6 +43,7 @@ class Setup:
     def annotate_interactively(self):
         fig = self.raw.plot()
         fig.fake_keypress('a')
+        plt.show()
         interactive_annot = self.raw.annotations
         return interactive_annot
 
@@ -52,4 +69,4 @@ class Setup:
 
 
 # event visiualization
-fig = mne.viz.plot_events(events_from_annot, event_id=event_dict, sfreq=raw.info['sfreq'], first_samp=raw.first_samp)
+# fig = mne.viz.plot_events(events_from_annot, event_id=event_dict, sfreq=raw.info['sfreq'], first_samp=raw.first_samp)

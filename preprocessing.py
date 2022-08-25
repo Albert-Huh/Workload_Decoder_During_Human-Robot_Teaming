@@ -6,7 +6,7 @@ import mne
 matplotlib.use('TkAgg')
 
 class Filtering:
-    def __init__(self, raw, l_freq, h_freq, nf_freqs=(60,120,180)):
+    def __init__(self, raw, l_freq, h_freq, nf_freqs=(60,120)):
         # filter parameters
         self.raw = raw.copy()
         self.sfreq = raw.info['sfreq']
@@ -60,16 +60,16 @@ class Filtering:
     def resample(self,new_sfreq=None, window='boxcar', events=None, verbose='warning'):
         
         if new_sfreq == None:
-            new_sfreq == 4*self.h_freq
-        if new_sfreq > self.sfreq:
+            new_sfreq = 4*self.h_freq
+        elif new_sfreq > self.sfreq:
             print('Error: New sampling frequency is greather than previous sampling freqeuncy. (Recommended new_f_s = 4 x high_f_c)')
             return
         filt_raw = self.raw.resample(sfreq=new_sfreq,
-            napd='auto', window=window, events=events, verbose=verbose)
+            npad='auto', window=window, events=events, verbose=verbose)
         return filt_raw
 
     def external_artifact_rejection(self):
-        
+        self.raw.load_data()
         filt_raw = self.highpass()
         filt_raw = self.notch()
         filt_raw = self.lowpass()
