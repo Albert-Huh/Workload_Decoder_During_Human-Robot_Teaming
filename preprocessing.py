@@ -104,13 +104,13 @@ class Indepndent_Component_Analysis:
         # row = 1 if self.n_components < 4 else self.n_components // 4 +1
         # fig, axis = plt.subplots(row, col)
         ica_picks = list(np.arange(0,self.n_components-1,1))
-        self.plot_properties(self.raw, picks=ica_picks)
+        self.ica.plot_properties(self.raw, picks=ica_picks)
 
     def exclude_ica(self, list_exclude=[]):
 
         self.ica.exclude = list_exclude
     
-    def create_physsiological_evoked(self, baseline=(-0.5, -0.2), verbose='warning'):
+    def create_physiological_evoked(self, baseline=(-0.5, -0.2), verbose='warning'):
 
         if self.find_eog_peaks == True:
             eog_evoked = mne.preprocessing.create_eog_epochs(self.raw, picks='eeg', 
@@ -122,7 +122,7 @@ class Indepndent_Component_Analysis:
             self.ecg_evoked = ecg_evoked
         return eog_evoked if 'eog_evoked' in locals() else None, ecg_evoked if 'ecg_evoked' in locals() else None
 
-    def visualize_physsiological_evoked(self, evoked_epoch):
+    def visualize_physiological_evoked(self, evoked_epoch):
 
         evoked_epoch.plot_image(combine='mean')
         evoked_epoch.average().plot_joint()
@@ -159,7 +159,7 @@ class Indepndent_Component_Analysis:
                 plt.show()
         else:
             print('Warning: ECG indices were not found.')
-        return eog_indices if 'eog_indices' in locals() else None, eog_scores if 'eog_scores' in locals() else None, ecg_indices if 'ecg_indices' in locals() else None, ecg_scores if 'ecg_scores' in locals() else None
+        return eog_indices if 'eog_indices' in locals() else [], eog_scores if 'eog_scores' in locals() else [], ecg_indices if 'ecg_indices' in locals() else [], ecg_scores if 'ecg_scores' in locals() else []
 
     def perfrom_ICA(self):
         eog_indices, ecg_indices = [], []
@@ -168,7 +168,8 @@ class Indepndent_Component_Analysis:
         eog_indices, _, ecg_indices, _ = self.find_physiological_artifacts(
             eog_treshold=0.8, ecg_treshold='auto', reject_by_annotation=True,
             measure='correlation', plot_fig=True, verbose='warning')
-        self.ica.exclude = self.exclude_ica(eog_indices + ecg_indices)
+        print(eog_indices + ecg_indices)
+        self.exclude_ica(eog_indices + ecg_indices)
         self.ica.apply(self.raw)
         self.ica.plot_overlay(self.raw, exclude=self.ica.exclude, picks='eeg')
         return self.raw
