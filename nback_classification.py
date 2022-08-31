@@ -23,14 +23,24 @@ for file_name in raw_data_list:
         # fig = raw.bv_raw.plot()
         # fig = raw.et_raw.plot()
         # plt.show()
-        filters = preprocessing.Filtering(raw.raw, l_freq=1, h_freq=50)
-        raw.raw = filters.external_artifact_rejection()
         raw.get_brainvision_raw()
+        raw.bv_raw.load_data()
+        raw.bv_raw.set_eeg_reference('average')
         raw.get_e_tattoo_raw()
+        raw.et_raw.load_data()
+        raw.et_raw.set_eeg_reference(ref_channels=['A1', 'A2'])
+
+        bv_filters = preprocessing.Filtering(raw.bv_raw, l_freq=1, h_freq=50)
+        raw.bv_raw = bv_filters.external_artifact_rejection()
+        et_filters = preprocessing.Filtering(raw.et_raw, l_freq=1, h_freq=50)
+        raw.et_raw = et_filters.external_artifact_rejection()
+
+        # raw.get_brainvision_raw()
+        # raw.get_e_tattoo_raw()
         # fig = raw.bv_raw.plot()
         # fig = raw.et_raw.plot()
         # plt.show()
-        print(raw.raw.info['meas_date'])
+        # print(raw.raw.info['meas_date'])
         meas_date = str(raw.raw.info['meas_date'])
         recorder_meas_time = meas_date[0:4]+meas_date[5:7]+meas_date[8:10]+meas_date[11:19].replace(':','')
         report_list = os.listdir(os.path.join(os.getcwd(), 'data/reports'))
@@ -43,7 +53,6 @@ for file_name in raw_data_list:
         event_dict = {'0-back': 0, '1-back': 1, '2-back': 2}
         # fig = mne.viz.plot_events(nback_event, event_id=event_dict, sfreq=raw.raw.info['sfreq'], first_samp=raw.raw.first_samp)
         
-        '''
         bv_ica = preprocessing.Indepndent_Component_Analysis(raw.bv_raw, n_components=8)
         et_ica = preprocessing.Indepndent_Component_Analysis(raw.et_raw, n_components=4)
 
@@ -55,9 +64,8 @@ for file_name in raw_data_list:
         fig = raw.bv_raw.plot()
         fig = raw.et_raw.plot()
         plt.show()
-        '''
-        
-        bv_epochs = mne.Epochs(raw.bv_raw, nback_event, event_id=event_dict, tmin=0, tmax=2.0, preload=True, picks=['eeg','eog'])
-        et_epochs = mne.Epochs(raw.et_raw, nback_event, event_id=event_dict, tmin=0, tmax=2.0, preload=True, picks=['eeg','eog'])
+        print(nback_event)
+        bv_epochs = mne.Epochs(raw.bv_raw, nback_event, event_id=event_dict, tmin=-0.2, tmax=1.8, preload=True, picks=['eeg','eog'])
+        et_epochs = mne.Epochs(raw.et_raw, nback_event, event_id=event_dict, tmin=-0.2, tmax=1.8, preload=True, picks=['eeg','eog'])
         break
         

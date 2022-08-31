@@ -86,7 +86,7 @@ def get_stim_time_delta(report, meas_isodate, fs):
 
 def get_nback_event(report, timestamp_tdel, fs):
     # Create event from stim time_delta
-    nback_event = np.zeros((12*20,3))
+    nback_event = np.zeros((12*20,3), int)
     for i in range(len(report['nback'])):
         for j in range(20):
             event_onset = timestamp_tdel[i] + j*2*fs
