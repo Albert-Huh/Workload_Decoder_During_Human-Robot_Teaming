@@ -8,8 +8,7 @@ import preprocessing
 
 raw_data_list = os.listdir(os.path.join(os.getcwd(), 'data/raw_data'))
 for file_name in raw_data_list:
-    if file_name.endswith('.fif') and file_name.startswith('Dual', 7, 11):
-        print('flag')
+    if file_name.endswith('.fif') and file_name.startswith('070622_Dual'): #startswith('date_Dual') can isolate experiment session  ('Dual', 7, 11)
         raw_path_annot = os.path.join(os.path.join(os.getcwd(), 'data/raw_data'), file_name)
         montage_path = os.path.join(os.getcwd(), 'data/Workspaces_Montages/active electrodes/actiCAP for LiveAmp 32 Channel','CLA-32.bvef')
         raw_annot = setup(raw_path_annot, montage_path, mode='Binary')
@@ -48,10 +47,11 @@ for file_name in raw_data_list:
             report_path = os.path.join(os.path.join(os.getcwd(), 'data/reports'), report_name)
             report_log_time = report_path.split('_',1)[1][0:15].replace('_', '')
             if abs(int(recorder_meas_time)-int(report_log_time)) < 60:
+                resampled_freq = 200
                 # print(report_path)
-                nback_event = raw.get_events_from_nback_report(report_path=report_path)
+                nback_events = raw.get_events_from_nback_report(report_path=report_path, fs=resampled_freq)
         event_dict = {'0-back': 0, '1-back': 1, '2-back': 2}
-        # fig = mne.viz.plot_events(nback_event, event_id=event_dict, sfreq=raw.raw.info['sfreq'], first_samp=raw.raw.first_samp)
+        fig = mne.viz.plot_events(nback_events, event_id=event_dict, sfreq=resampled_freq, first_samp=raw.bv_raw.first_samp)
         
         bv_ica = preprocessing.Indepndent_Component_Analysis(raw.bv_raw, n_components=8)
         et_ica = preprocessing.Indepndent_Component_Analysis(raw.et_raw, n_components=4)
@@ -59,13 +59,46 @@ for file_name in raw_data_list:
         bv_eog_evoked = bv_ica.create_physiological_evoked()
         et_eog_evoked = et_ica.create_physiological_evoked()
 
-        raw.bv_raw = bv_ica.perfrom_ICA()
-        raw.et_raw = et_ica.perfrom_ICA()
-        fig = raw.bv_raw.plot()
-        fig = raw.et_raw.plot()
+        bv_ica.perfrom_ICA()
+        et_ica.perfrom_ICA()
+        # fig = raw.bv_raw.plot()
+        # fig = raw.et_raw.plot()
+        # plt.show()
+        # print(nback_event)
+        # del raw.bv_raw, raw.et_raw
+        # raw.bv_raw.load_data()
+        # raw.et_raw.load_data()
+
+        bv_theta = preprocessing.Filtering(raw.bv_raw, 4, 7)
+        bv_alpha = preprocessing.Filtering(raw.bv_raw, 8, 13)
+        bv_beta = preprocessing.Filtering(raw.bv_raw, 14, 30)
+        bv_theta_raw = bv_theta.bandpass()
+        bv_alpha_raw = bv_alpha.bandpass()
+        bv_beta_raw = bv_beta.bandpass()
+        fig = bv_theta_raw.plot()
+        fig = bv_alpha_raw.plot()
+        fig = bv_beta_raw.plot()
         plt.show()
-        print(nback_event)
-        bv_epochs = mne.Epochs(raw.bv_raw, nback_event, event_id=event_dict, tmin=-0.2, tmax=1.8, preload=True, picks=['eeg','eog'])
-        et_epochs = mne.Epochs(raw.et_raw, nback_event, event_id=event_dict, tmin=-0.2, tmax=1.8, preload=True, picks=['eeg','eog'])
+
+        bv_theta_epochs = mne.Epochs(bv_theta_raw, events=nback_events, event_id=event_dict, tmin=-0.2, tmax=1.8, preload=True, picks='eeg')
+        bv_alpha_epochs = mne.Epochs(bv_alpha_raw, events=nback_events, event_id=event_dict, tmin=-0.2, tmax=1.8, preload=True, picks='eeg')
+        bv_beta_epochs = mne.Epochs(bv_beta_raw, events=nback_events, event_id=event_dict, tmin=-0.2, tmax=1.8, preload=True, picks='eeg')
+        fig = bv_alpha_epochs['0-back'].plot_image(picks='eeg',combine='mean')
+        fig = bv_alpha_epochs['1-back'].plot_image(picks='eeg',combine='mean')
+        fig = bv_alpha_epochs['2-back'].plot_image(picks='eeg',combine='mean')
+        fig = bv_theta_epochs['0-back'].plot_image(picks='eeg',combine='mean')
+        fig = bv_theta_epochs['1-back'].plot_image(picks='eeg',combine='mean')
+        fig = bv_theta_epochs['2-back'].plot_image(picks='eeg',combine='mean')
+
+
+        # bv_epochs = mne.Epochs(raw=raw.bv_raw, events=nback_events, event_id=event_dict, tmin=-0.2, tmax=1.8, preload=True, picks='eeg')
+        # et_epochs = mne.Epochs(raw=raw.et_raw, events=nback_events, event_id=event_dict, tmin=-0.2, tmax=1.8, preload=True, picks='eeg')
+        # print(bv_epochs)
+        # print(et_epochs)
+        # zeroback_epochs = bv_epochs['0-back']
+        # fig = bv_epochs['0-back'].plot_image(picks='eeg',combine='mean')
+        # fig = bv_epochs['1-back'].plot_image(picks='eeg',combine='mean')
+        # fig = bv_epochs['2-back'].plot_image(picks='eeg',combine='mean')
+        # plt.show()
         break
         

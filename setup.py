@@ -29,10 +29,10 @@ class Setup:
             self.et_raw.rename_channels(new_names)
 
             self.bv_raw.set_montage(self.montage)
-            fig = self.bv_raw.plot_sensors(show_names=True)
+            # fig = self.bv_raw.plot_sensors(show_names=True)
             # et_montage = self.montage.copy()
             # self.et_raw.set_montage(et_montage)
-            fig = self.et_raw.plot_sensors(show_names=True, block=True)
+            # fig = self.et_raw.plot_sensors(show_names=True, block=True)
         elif mode == 'Brainvision':
             self.raw.set_montage(self.montage)
             # pass
@@ -40,7 +40,7 @@ class Setup:
     def get_brainvision_raw(self):
         self.bv_raw = self.raw.copy().pick_channels(['Fp1','Fp2','Fz','F3','F4','F7','F8','Cz','C3','C4','T7','T8','Pz','P3','P4','P7','P8','O1','O2','EOG'])
         self.bv_raw.set_montage(self.montage)
-        fig = self.bv_raw.plot_sensors(show_names=True)
+        # fig = self.bv_raw.plot_sensors(show_names=True)
 
     def get_e_tattoo_raw(self):
         self.et_raw = self.raw.copy().pick_channels(['Fp1_ET','Fp2_ET','F7_ET','F8_ET','A1','A2','EOG'])
@@ -49,7 +49,7 @@ class Setup:
             ch_name.replace('_ET', ''))
             for ch_name in self.et_raw.ch_names)
         self.et_raw.rename_channels(new_names)
-        fig = self.et_raw.plot_sensors(show_names=True, block=True)
+        # fig = self.et_raw.plot_sensors(show_names=True, block=True)
         
     def get_annotation_info(self):
         onset = self.raw.annotations.onset
@@ -78,12 +78,12 @@ class Setup:
         events = mne.find_events(self.raw, stim_channel=stim_channel)
         return events
 
-    def get_events_from_nback_report(self, report_path):
+    def get_events_from_nback_report(self, report_path, fs):
         lines = nback.read_report_txt(report_path)
         key_string_list = nback.get_key_string()
         nback_report = nback.get_report_data(lines, key_string_list)
         meas_isodate = datetime.fromisoformat(str(self.raw.info['meas_date']))
-        fs = self.raw.info['sfreq']
+        # fs = self.raw.info['sfreq']
         timestamp_tdel = nback.get_stim_time_delta(nback_report, meas_isodate, fs)
         nback_event = nback.get_nback_event(nback_report, timestamp_tdel, fs)
         return nback_event

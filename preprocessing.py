@@ -68,11 +68,27 @@ class Filtering:
             npad='auto', window=window, events=events, verbose=verbose)
         return filt_raw
 
+    def bandpass(self, cutoff_freq=None, filt_type='fir', iir_params=None,
+        show_filt_params = False, verbose='warning'):
+
+        if cutoff_freq == None:
+            cutoff_freq = [self.l_freq, self.h_freq]
+        filt_raw = self.raw.filter(
+            l_freq=cutoff_freq[0], h_freq=cutoff_freq[1], picks=self.picks, method=filt_type,
+            iir_params=iir_params, verbose=verbose)
+        if show_filt_params == True:
+            # check the filter parameter
+            filter_params = mne.filter.create_filter(
+                data=self.raw.get_data(), sfreq=self.sfreq, l_freq=cutoff_freq[0], 
+                h_freq=cutoff_freq[1], method=filt_type, iir_params=iir_params)
+            mne.viz.plot_filter(h=filter_params, sfreq=self.sfreq, flim=(0.01, self.sfreq/2))
+        return filt_raw
+
     def external_artifact_rejection(self):
         self.raw.load_data()
-        filt_raw = self.highpass()
-        filt_raw = self.notch()
-        filt_raw = self.lowpass()
+        self.raw = self.highpass()
+        self.raw = self.notch()
+        self.raw = self.lowpass()
         filt_raw = self.resample()
         return filt_raw
     
@@ -103,7 +119,7 @@ class Indepndent_Component_Analysis:
         # col = self.n_components if self.n_components < 4 else 4
         # row = 1 if self.n_components < 4 else self.n_components // 4 +1
         # fig, axis = plt.subplots(row, col)
-        ica_picks = list(np.arange(0,self.n_components-1,1))
+        ica_picks = list(np.arange(0,self.n_components,1))
         self.ica.plot_properties(self.raw, picks=ica_picks)
 
     def exclude_ica(self, list_exclude=[]):
@@ -172,4 +188,4 @@ class Indepndent_Component_Analysis:
         self.exclude_ica(eog_indices + ecg_indices)
         self.ica.apply(self.raw)
         self.ica.plot_overlay(self.raw, exclude=self.ica.exclude, picks='eeg')
-        return self.raw
+        # return self.raw
