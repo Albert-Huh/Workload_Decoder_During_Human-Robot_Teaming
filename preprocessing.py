@@ -180,7 +180,7 @@ class Indepndent_Component_Analysis:
     def perfrom_ICA(self):
         eog_indices, ecg_indices = [], []
         self.setup_ICA()
-        self.visualize_ICA_components()
+        # self.visualize_ICA_components() # Comment while debugging
         eog_indices, _, ecg_indices, _ = self.find_physiological_artifacts(
             eog_treshold=0.8, ecg_treshold='auto', reject_by_annotation=True,
             measure='correlation', plot_fig=True, verbose='warning')
