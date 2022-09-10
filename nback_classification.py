@@ -136,20 +136,37 @@ print(bv_x.shape)
 print(et_x.shape)
 y = all_bv_epochs.events[:,2]
 print(y.shape)
-X_train, Y_train, X_test, Y_test = feature_extraction.create_train_test_sets(bv_x, y, 0.3)
-print(len(X_train), len(Y_train), len(X_test), len(Y_test))
+bv_X_train, Y_train, bv_X_test, Y_test = feature_extraction.create_train_test_sets(bv_x, y, 0.3)
+et_X_train, Y_train, et_X_test, Y_test = feature_extraction.create_train_test_sets(et_x, y, 0.3)
+
+# print(len(et_X_train), len(Y_train), len(et_X_test), len(Y_test))
+
 
 ############### CLASSIFICATION ###############
 ############### Random forest classification
 # pipe_RF = make_pipeline(FunctionTransformer(feature_extraction.eeg_power_band, validate=False), RandomForestClassifier(n_estimators=100, random_state=42))
 pipe_RF = make_pipeline(RandomForestClassifier(n_estimators=50, random_state=42))
-pipe_RF.fit(X_train, Y_train)
+pipe_RF.fit(bv_X_train, Y_train)
 
 # Test
-Y_pred = pipe_RF.predict(X_test)
+Y_pred = pipe_RF.predict(bv_X_test)
 # Assess the results
 acc = accuracy_score(Y_test, Y_pred)
-print('Random Forest Classifier')
+print('BV Random Forest Classifier')
+print('Accuracy score: {}'.format(acc))
+print('Confusion Matrix:')
+print(confusion_matrix(Y_test, Y_pred))
+print('Classification Report:')
+print(classification_report(Y_test, Y_pred, target_names=event_dict.keys()))
+
+# ET ver
+pipe_RF.fit(et_X_train, Y_train)
+
+# Test
+Y_pred = pipe_RF.predict(et_X_test)
+# Assess the results
+acc = accuracy_score(Y_test, Y_pred)
+print('ET Random Forest Classifier')
 print('Accuracy score: {}'.format(acc))
 print('Confusion Matrix:')
 print(confusion_matrix(Y_test, Y_pred))
@@ -160,12 +177,25 @@ print(classification_report(Y_test, Y_pred, target_names=event_dict.keys()))
 oa = OAS(store_precision=False, assume_centered=False)
 # pipe_LDA = make_pipeline(FunctionTransformer(feature_extraction.eeg_power_band, validate=False), LinearDiscriminantAnalysis(solver="lsqr", covariance_estimator=oa))
 pipe_LDA = make_pipeline(LinearDiscriminantAnalysis(solver="lsqr", covariance_estimator=oa))
-pipe_LDA.fit(X_train, Y_train)
+pipe_LDA.fit(bv_X_train, Y_train)
 # Test
-Y_pred = pipe_RF.predict(X_test)
+Y_pred = pipe_LDA.predict(bv_X_test)
 # Assess the results
 acc = accuracy_score(Y_test, Y_pred)
-print('Linear Discriminant Analysis')
+print('BV Linear Discriminant Analysis')
+print('Accuracy score: {}'.format(acc))
+print('Confusion Matrix:')
+print(confusion_matrix(Y_test, Y_pred))
+print('Classification Report:')
+print(classification_report(Y_test, Y_pred, target_names=event_dict.keys()))
+
+# ET
+pipe_LDA.fit(et_X_train, Y_train)
+# Test
+Y_pred = pipe_LDA.predict(et_X_test)
+# Assess the results
+acc = accuracy_score(Y_test, Y_pred)
+print('ET Linear Discriminant Analysis')
 print('Accuracy score: {}'.format(acc))
 print('Confusion Matrix:')
 print(confusion_matrix(Y_test, Y_pred))
@@ -180,9 +210,9 @@ acc_max = 0
 opt_Y_pred = []
 for KNN_param in [(x, y) for x in k_range for y in weight_fuc]:
     pipe_KNN = make_pipeline(KNeighborsClassifier(n_neighbors=KNN_param[0],weights=KNN_param[1]))
-    pipe_KNN.fit(X_train, Y_train)
+    pipe_KNN.fit(bv_X_train, Y_train)
     # Test
-    Y_pred = pipe_KNN.predict(X_test)
+    Y_pred = pipe_KNN.predict(bv_X_test)
     # Assess the results
     acc = accuracy_score(Y_test, Y_pred)
     f1 = f1_score(Y_test, Y_pred, average='weighted', labels=np.unique(Y_pred))
@@ -191,7 +221,32 @@ for KNN_param in [(x, y) for x in k_range for y in weight_fuc]:
         opt_KNN_param = KNN_param
         opt_Y_pred = Y_pred
 
-print('KNN Classifier')
+print('BV KNN Classifier')
+print(opt_KNN_param)
+print('Accuracy score: {}'.format(acc))
+print('Confusion Matrix:')
+print(confusion_matrix(Y_test, opt_Y_pred))
+print('Classification Report:')
+print(classification_report(Y_test, opt_Y_pred, target_names=event_dict.keys()))
+
+# ET
+opt_KNN_param = []
+acc_max = 0
+opt_Y_pred = []
+for KNN_param in [(x, y) for x in k_range for y in weight_fuc]:
+    pipe_KNN = make_pipeline(KNeighborsClassifier(n_neighbors=KNN_param[0],weights=KNN_param[1]))
+    pipe_KNN.fit(et_X_train, Y_train)
+    # Test
+    Y_pred = pipe_KNN.predict(et_X_test)
+    # Assess the results
+    acc = accuracy_score(Y_test, Y_pred)
+    f1 = f1_score(Y_test, Y_pred, average='weighted', labels=np.unique(Y_pred))
+    if acc_max < acc and f1 > 0.0:
+        acc_max = acc
+        opt_KNN_param = KNN_param
+        opt_Y_pred = Y_pred
+
+print('ET KNN Classifier')
 print(opt_KNN_param)
 print('Accuracy score: {}'.format(acc))
 print('Confusion Matrix:')
@@ -207,9 +262,9 @@ acc_max = 0
 opt_Y_pred = []
 for C_gamma_param in [(x, y) for x in C_range for y in gamma_range]:
     pipe_SVM = make_pipeline(StandardScaler(), SVC(kernel='rbf',C=C_gamma_param[0],gamma=C_gamma_param[1]))
-    pipe_SVM.fit(X_train, Y_train)
+    pipe_SVM.fit(bv_X_train, Y_train)
     # Test
-    Y_pred = pipe_SVM.predict(X_test)
+    Y_pred = pipe_SVM.predict(bv_X_test)
     acc = accuracy_score(Y_test, Y_pred)
     f1 = f1_score(Y_test, Y_pred, average='weighted', labels=np.unique(Y_pred))
     if acc_max < acc and f1 > 0.0:
@@ -217,12 +272,31 @@ for C_gamma_param in [(x, y) for x in C_range for y in gamma_range]:
         opt_C_gamma_param = C_gamma_param
         opt_Y_pred = Y_pred
 
-# pipe_SVM = make_pipeline(StandardScaler(), SVC(kernel='rbf',gamma=10**-1, C=10**0))
-# pipe_SVM.fit(X_train, Y_train)
-# # Test
-# Y_pred = pipe_SVM.predict(X_test)
-# acc = accuracy_score(Y_test, Y_pred)
-print('SVM Classifier')
+print('BV SVM Classifier')
+print(opt_C_gamma_param)
+print('Accuracy score: {}'.format(acc_max))
+print('Confusion Matrix:')
+print(confusion_matrix(Y_test, opt_Y_pred))
+print('Classification Report:')
+print(classification_report(Y_test, opt_Y_pred, target_names=event_dict.keys()))
+
+# ET
+opt_C_gamma_param = []
+acc_max = 0
+opt_Y_pred = []
+for C_gamma_param in [(x, y) for x in C_range for y in gamma_range]:
+    pipe_SVM = make_pipeline(StandardScaler(), SVC(kernel='rbf',C=C_gamma_param[0],gamma=C_gamma_param[1]))
+    pipe_SVM.fit(et_X_train, Y_train)
+    # Test
+    Y_pred = pipe_SVM.predict(et_X_test)
+    acc = accuracy_score(Y_test, Y_pred)
+    f1 = f1_score(Y_test, Y_pred, average='weighted', labels=np.unique(Y_pred))
+    if acc_max < acc and f1 > 0.0:
+        acc_max = acc
+        opt_C_gamma_param = C_gamma_param
+        opt_Y_pred = Y_pred
+
+print('ET SVM Classifier')
 print(opt_C_gamma_param)
 print('Accuracy score: {}'.format(acc_max))
 print('Confusion Matrix:')
