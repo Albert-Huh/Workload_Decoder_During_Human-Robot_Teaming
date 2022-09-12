@@ -144,13 +144,14 @@ class Indepndent_Component_Analysis:
         evoked_epoch.average().plot_joint()
         evoked_epoch.average().plot_image()
 
-    def find_physiological_artifacts(self, eog_treshold=0.8, ecg_treshold='auto', 
+    def find_physiological_artifacts(self, eog_treshold='auto', ecg_treshold='auto', 
         reject_by_annotation=True, measure='correlation', plot_fig=True, verbose='warning'):
 
         if self.find_eog_peaks == True:
             eog_indices, eog_scores = self.ica.find_bads_eog(self.raw, ch_name='EOG', 
                 threshold=eog_treshold, start=None, stop=None, l_freq=1, h_freq=10, 
                 reject_by_annotation=reject_by_annotation, measure=measure, verbose=verbose)
+            print(eog_indices, eog_scores)
             if plot_fig == True:
                 # barplot of ICA component "EOG match" scores
                 self.ica.plot_scores(eog_scores)
@@ -182,7 +183,7 @@ class Indepndent_Component_Analysis:
         self.setup_ICA()
         # self.visualize_ICA_components() # Comment while debugging
         eog_indices, _, ecg_indices, _ = self.find_physiological_artifacts(
-            eog_treshold=0.8, ecg_treshold='auto', reject_by_annotation=True,
+            eog_treshold=0.5, ecg_treshold='auto', reject_by_annotation=True,
             measure='correlation', plot_fig=True, verbose='warning')
         print(eog_indices + ecg_indices)
         self.exclude_ica(eog_indices + ecg_indices)

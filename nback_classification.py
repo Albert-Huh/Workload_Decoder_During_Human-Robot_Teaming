@@ -30,7 +30,8 @@ et_epochs_list = []
 events_list = []
 
 for file_name in raw_data_list:
-    if file_name.endswith('.fif') and file_name.startswith('070622_Dual'): #startswith('date_Dual') can isolate experiment session  ('Dual', 7, 11) '070622_Dual' 062922_Dual
+    if file_name.endswith('.fif') and file_name.startswith('Dual_Nback_Test_RG',7,25): #startswith('date_Dual') can isolate experiment session  ('Dual', 7, 11) '070622_Dual' 062922_Dual, note for071422_Dual'Dual_Nback_Test_AR',7,25 
+        # Note for Kaz: try EJ and CG and save the results
         raw_path_annot = os.path.join(os.path.join(os.getcwd(), 'data/raw_data'), file_name)
         montage_path = os.path.join(os.getcwd(), 'data/Workspaces_Montages/active electrodes/actiCAP for LiveAmp 32 Channel','CLA-32.bvef')
         raw_annot = setup(raw_path_annot, montage_path, mode='Binary')
