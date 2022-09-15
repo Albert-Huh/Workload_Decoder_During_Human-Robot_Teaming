@@ -201,10 +201,21 @@ n_cycles = freqs / 2.  # different number of cycle per frequency
 # cnorm = matplotlib.colors.TwoSlopeNorm(vmin=-1, vcenter=0, vmax=3)
 # cmap=cnorm
 # baseline=(-5.0, -1.0)
+plt.rcParams['font.size'] = '16'
+plt.rcParams['font.serif'] = 'Times New Roman'
+
+
 power, itc = mne.time_frequency.tfr_morlet(bv_epoch_eye_closed, freqs=freqs, n_cycles=n_cycles, use_fft=True, return_itc=True, decim=1, n_jobs=1, picks='eeg')
-power.plot(baseline=(-10.0, -1.0), combine='mean', mode='logratio', title='BV Closing Epoch Average Power')
-print(power.data)
-print(np.nanmax(power.data))
+fig = power.plot(baseline=(-10.0, -1.0), combine='mean', mode='logratio', title='BV Closing Epoch Average Power')
+# fig.ax = plt.gca()
+# plt.rcParams.update({'font.size': 16})
+# plt.rcParamsupdate({'font.family':'Times New Roman'})
+# plt.xticks(np.arange(-10,10,step=2.5))
+# plt.yticks([1, 4, 7, 13, 16, 30, 50])
+# plt.show()
+
+# print(power.data)
+# print(np.nanmax(power.data))
 fig, axis = plt.subplots(1, 2, figsize=(7, 4))
 cnorm = matplotlib.colors.TwoSlopeNorm(vmin=-0.275, vcenter=0, vmax=0.275)
 power.plot_topomap(ch_type='eeg', tmin=-10, tmax=-1, fmin=8, fmax=13, baseline=(-10.0, -1.0), mode='logratio', axes=axis[0], title='Eye-Open Alpha (8-13 Hz)', show=False)

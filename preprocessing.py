@@ -156,7 +156,8 @@ class Indepndent_Component_Analysis:
                 # barplot of ICA component "EOG match" scores
                 self.ica.plot_scores(eog_scores)
                 # plot diagnostics
-                self.ica.plot_properties(self.raw, picks=eog_indices)
+                if len(eog_indices) != 0:
+                    self.ica.plot_properties(self.raw, picks=eog_indices)
                 # plot ICs applied to raw data, with EOG matches highlighted
                 self.ica.plot_sources(self.raw)
                 plt.show()
@@ -183,7 +184,7 @@ class Indepndent_Component_Analysis:
         self.setup_ICA()
         # self.visualize_ICA_components() # Comment while debugging
         eog_indices, _, ecg_indices, _ = self.find_physiological_artifacts(
-            eog_treshold=0.5, ecg_treshold='auto', reject_by_annotation=True,
+            eog_treshold=0.6, ecg_treshold='auto', reject_by_annotation=True,
             measure='correlation', plot_fig=True, verbose='warning')
         print(eog_indices + ecg_indices)
         self.exclude_ica(eog_indices + ecg_indices)

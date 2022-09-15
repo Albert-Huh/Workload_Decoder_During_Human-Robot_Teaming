@@ -6,6 +6,7 @@ from datetime import datetime, date, time, timedelta
 import matplotlib
 import matplotlib.pyplot as plt
 import read_nback_report as nback
+import read_hrt_report as hrt
 
 import mne
 matplotlib.use('TkAgg')
@@ -33,6 +34,8 @@ class Setup:
             # et_montage = self.montage.copy()
             # self.et_raw.set_montage(et_montage)
             # fig = self.et_raw.plot_sensors(show_names=True, block=True)
+        elif mode == 'E-tattoo':
+            self.et_raw = self.raw.copy().pick_channels(['Fp1','Fp2','F7','F8','A1','EOG'])
         elif mode == 'Brainvision':
             self.raw.set_montage(self.montage)
             # pass
@@ -84,10 +87,19 @@ class Setup:
         nback_report = nback.get_report_data(lines, key_string_list)
         meas_isodate = datetime.fromisoformat(str(self.raw.info['meas_date']))
         # fs = self.raw.info['sfreq']
-        timestamp_tdel = nback.get_stim_time_delta(nback_report, meas_isodate, fs)
-        nback_event = nback.get_nback_event(nback_report, timestamp_tdel, fs)
+        samplestamp_tdel = nback.get_stim_time_delta(nback_report, meas_isodate, fs)
+        nback_event = nback.get_nback_event(nback_report, samplestamp_tdel, fs)
         return nback_event
 
+    def get_events_from_hrt_report(self, report_path, fs):
+        lines = hrt.read_report_txt(report_path)
+        key_string_list = hrt.get_key_string()
+        hrt_report = hrt.get_report_data(lines, key_string_list)
+        meas_isodate = datetime.fromisoformat(str(self.raw.info['meas_date']))
+        # fs = self.raw.info['sfreq']
+        start_samplestamp_tdel, end_samplestamp_tdel = hrt.get_stim_time_delta(hrt_report, meas_isodate, fs)
+        hrt_events = hrt.get_hrt_event(hrt_report, start_samplestamp_tdel, end_samplestamp_tdel, fs,5)
+        return hrt_events
 
 # event visiualization
 # fig = mne.viz.plot_events(events_from_annot, event_id=event_dict, sfreq=raw.info['sfreq'], first_samp=raw.first_samp)

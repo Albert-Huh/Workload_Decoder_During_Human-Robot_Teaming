@@ -2,6 +2,7 @@ import sys
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib
 import mne
 from setup import Setup as setup
 import preprocessing
@@ -29,9 +30,10 @@ bv_epochs_list = []
 et_epochs_list = []
 events_list = []
 
+
 for file_name in raw_data_list:
-    if file_name.endswith('.fif') and file_name.startswith('071422_Dual_Nback_Test_CG_PM_1'): #startswith('date_Dual') can isolate experiment session  ('Dual', 7, 11) '070622_Dual' 062922_Dual, note for071422_Dual'Dual_Nback_Test_AR',7,25 
-        # Note for Kaz: try EJ and CG and save the results 'Dual_Nback_Test_CG',7,25
+    if file_name.endswith('.fif') and file_name.startswith('Eye_OC_Test_RG',7,21): #startswith('date_Dual') can isolate experiment session  ('Dual', 7, 11)
+        print(file_name)
         raw_path_annot = os.path.join(os.path.join(os.getcwd(), 'data/raw_data'), file_name)
         montage_path = os.path.join(os.getcwd(), 'data/Workspaces_Montages/active electrodes/actiCAP for LiveAmp 32 Channel','CLA-32.bvef')
         raw_annot = setup(raw_path_annot, montage_path, mode='Binary')
@@ -40,11 +42,7 @@ for file_name in raw_data_list:
         raw_path = os.path.join(os.path.join(os.getcwd(), 'data/raw_data'), file_name.replace('.fif','.vhdr'))
         raw = setup(raw_path, montage_path, mode='Dual')
         raw.set_annotation(raw.raw, onset=onset, duration=duration, description=description)
-        # raw.get_brainvision_raw()
-        # raw.get_e_tattoo_raw()
-        # fig = raw.bv_raw.plot()
-        # fig = raw.et_raw.plot()
-        # plt.show()
+
         raw.get_brainvision_raw()
         raw.bv_raw.load_data()
         raw.bv_raw.set_eeg_reference('average')
@@ -57,12 +55,8 @@ for file_name in raw_data_list:
         et_filters = preprocessing.Filtering(raw.et_raw, l_freq=1, h_freq=50)
         raw.et_raw = et_filters.external_artifact_rejection()
 
-        # raw.get_brainvision_raw()
-        # raw.get_e_tattoo_raw()
-        # fig = raw.bv_raw.plot()
-        # fig = raw.et_raw.plot()
-        # plt.show()
-        # print(raw.raw.info['meas_date'])
+        '''
+        # report reading
         meas_date = str(raw.raw.info['meas_date'])
         recorder_meas_time = meas_date[0:4]+meas_date[5:7]+meas_date[8:10]+meas_date[11:19].replace(':','')
         report_list = os.listdir(os.path.join(os.getcwd(), 'data/reports'))
@@ -72,9 +66,13 @@ for file_name in raw_data_list:
             if abs(int(recorder_meas_time)-int(report_log_time)) < 60:
                 resampled_freq = 200
                 # print(report_path)
-                nback_events = raw.get_events_from_nback_report(report_path=report_path, fs=resampled_freq)
-        event_dict = {'0-back': 0, '1-back': 1, '2-back': 2}
-        # fig = mne.viz.plot_events(nback_events, event_id=event_dict, sfreq=resampled_freq, first_samp=raw.bv_raw.first_samp)
+                nback_events = raw.get_events_from_annot(report_path=report_path, fs=resampled_freq)
+        '''
+        
+        custom_mapping = {'Comment/Eye_Closed': 1, 'Comment/Eye_Open': 2}
+        events, event_dict = mne.events_from_annotations(raw.bv_raw, event_id=custom_mapping)
+        resampled_freq = 200
+        # fig = mne.viz.plot_events(events, event_id=event_dict, sfreq=resampled_freq,first_samp=raw.bv_raw.first_samp)
         
         bv_ica = preprocessing.Indepndent_Component_Analysis(raw.bv_raw, n_components=8)
         et_ica = preprocessing.Indepndent_Component_Analysis(raw.et_raw, n_components=4)
@@ -117,18 +115,81 @@ for file_name in raw_data_list:
         fig = bv_theta_epochs['2-back'].plot_image(picks='eeg',combine='mean')
         '''
 
-        bv_epochs = mne.Epochs(raw=raw.bv_raw, events=nback_events, event_id=event_dict, tmin=-0.2, tmax=1.8, preload=True, picks='eeg')
+        bv_epochs = mne.Epochs(raw=raw.bv_raw, events=events, event_id=event_dict, tmin=-10.0, tmax=10.0, preload=True, picks='eeg')
         bv_epochs.equalize_event_counts()
         bv_epochs_list.append(bv_epochs)
-        et_epochs = mne.Epochs(raw=raw.et_raw, events=nback_events, event_id=event_dict, tmin=-0.2, tmax=1.8, preload=True, picks=['Fp1','Fp2','F7','F8'])
+        et_epochs = mne.Epochs(raw=raw.et_raw, events=events, event_id=event_dict, tmin=-10.0, tmax=10.0, preload=True, picks=['Fp1','Fp2','F7','F8'])
         et_epochs.equalize_event_counts()
         et_epochs_list.append(et_epochs)
-        events_list.append(nback_events)
+        events_list.append(events)
 
 # all_events = mne.concatenate_events(events_list)
 
 all_bv_epochs = mne.concatenate_epochs(bv_epochs_list)
 all_et_epochs = mne.concatenate_epochs(et_epochs_list)
+
+bv_epoch_eye_closed = all_bv_epochs['Comment/Eye_Closed']
+bv_epoch_eye_open = all_bv_epochs['Comment/Eye_Open']
+et_epoch_eye_closed = all_et_epochs['Comment/Eye_Closed']
+et_epoch_eye_open = all_et_epochs['Comment/Eye_Open']
+
+freqs = np.logspace(*np.log10([1, 50]), num=160)
+n_cycles = freqs / 2.
+
+#### Compute Time-Freq
+freqs = np.logspace(*np.log10([1, 50]), num=160)
+n_cycles = freqs / 2.  # different number of cycle per frequency
+# cnorm = matplotlib.colors.TwoSlopeNorm(vmin=-1, vcenter=0, vmax=3)
+# cmap=cnorm
+# baseline=(-5.0, -1.0)
+
+# BV Closed
+power, itc = mne.time_frequency.tfr_morlet(bv_epoch_eye_closed, freqs=freqs, n_cycles=n_cycles, use_fft=True, return_itc=True, decim=1, n_jobs=1, picks='eeg')
+power.plot(baseline=(-10.0, -1.0), combine='mean', mode='logratio', title='BV Closing Epoch Average Power')
+# print(power.data)
+# print(np.nanmax(power.data))
+fig, axis = plt.subplots(1, 2, figsize=(7, 4))
+cnorm = matplotlib.colors.TwoSlopeNorm(vmin=-0.275, vcenter=0, vmax=0.275)
+power.plot_topomap(ch_type='eeg', tmin=-10, tmax=-1, fmin=8, fmax=13, baseline=(-10.0, -1.0), mode='logratio', axes=axis[0], title='Eye-Open Alpha (8-13 Hz)', show=False)
+power.plot_topomap(ch_type='eeg', tmin=1, tmax=10, fmin=8, fmax=13, baseline=(-10.0, -1.0), mode='logratio', axes=axis[1], title='Eye-Closed Alpha (8-13 Hz)', show=False)
+mne.viz.tight_layout()
+plt.show()
+
+# BV Open
+power, itc = mne.time_frequency.tfr_morlet(bv_epoch_eye_open, freqs=freqs, n_cycles=n_cycles, use_fft=True, return_itc=True, decim=1, n_jobs=1, picks='eeg')
+power.plot(baseline=(-10.0, -1.0), combine='mean', mode='logratio', title='BV Opening Epoch Average Power')
+# power.plot([1], baseline=(-5.0, 0), mode='logratio', title=power.ch_names[1])
+fig, axis = plt.subplots(1, 2, figsize=(7, 4))
+cnorm = matplotlib.colors.TwoSlopeNorm(vmin=-0.225, vcenter=-0.1, vmax=0.025)
+power.plot_topomap(ch_type='eeg', tmin=-10, tmax=-1, fmin=8, fmax=13, baseline=(-10.0, -1.0), mode='logratio', axes=axis[0], title='Eye-Closed Alpha (8-13 Hz)', show=False)
+power.plot_topomap(ch_type='eeg', tmin=1, tmax=10, fmin=8, fmax=13, baseline=(-10.0, -1.0), mode='logratio', axes=axis[1], title='Eye-Open Alpha (8-13 Hz)', show=False)
+mne.viz.tight_layout()
+plt.show()
+
+# ET Closed
+power, itc = mne.time_frequency.tfr_morlet(et_epoch_eye_closed, freqs=freqs, n_cycles=n_cycles, use_fft=True, return_itc=True, decim=1, n_jobs=1, picks='eeg')
+power.plot(baseline=(-10.0, -1.0), combine='mean', mode='logratio', title='ET Closing Epoch Average Power')
+
+fig, axis = plt.subplots(1, 2, figsize=(7, 4))
+cnorm = matplotlib.colors.TwoSlopeNorm(vmin=-0.2, vcenter=-0.05, vmax=0.1)
+power.plot_topomap(ch_type='eeg', tmin=-10, tmax=-1, fmin=8, fmax=13, baseline=(-10.0, -1.0), mode='logratio', axes=axis[0], title='Eye-Open Alpha (8-13 Hz)', show=False)
+power.plot_topomap(ch_type='eeg', tmin=1, tmax=10, fmin=8, fmax=13, baseline=(-10.0, -1.0), mode='logratio', axes=axis[1], title='Eye-Closed Alpha (8-13 Hz)', show=False)
+mne.viz.tight_layout()
+plt.show()
+
+# ET Open
+power, itc = mne.time_frequency.tfr_morlet(et_epoch_eye_open, freqs=freqs, n_cycles=n_cycles, use_fft=True, return_itc=True, decim=1, n_jobs=1, picks='eeg')
+power.plot(baseline=(-10.0, -1.0), combine='mean', mode='logratio', title='ET Opening Epoch Average Power')
+# power.plot([3], baseline=(-5.0, 0), mode='logratio', title=power.ch_names[3])
+fig, axis = plt.subplots(1, 2, figsize=(7, 4))
+cnorm = matplotlib.colors.TwoSlopeNorm(vmin=-0.275, vcenter=-0.1875, vmax=-0.1)
+power.plot_topomap(ch_type='eeg', tmin=-10, tmax=-1, fmin=8, fmax=13, baseline=(-10.0, -1.0), mode='logratio', axes=axis[0], title='Eye-Closed Alpha (8-13 Hz)', show=False)
+power.plot_topomap(ch_type='eeg', tmin=1, tmax=10, fmin=8, fmax=13, baseline=(-10.0, -1.0), mode='logratio', axes=axis[1], title='Eye-Open Alpha (8-13 Hz)', show=False)
+mne.viz.tight_layout()
+plt.show()
+
+
+###### Learning Data Creation
 # print(len(all_bv_epochs))
 # print(len(all_et_epochs))
 bv_x = feature_extraction.eeg_power_band(all_bv_epochs, mean=False)
@@ -137,8 +198,8 @@ print(bv_x.shape)
 print(et_x.shape)
 y = all_bv_epochs.events[:,2]
 print(y.shape)
-bv_X_train, Y_train, bv_X_test, Y_test = feature_extraction.create_train_test_sets(bv_x, y, 0.2)
-et_X_train, Y_train, et_X_test, Y_test = feature_extraction.create_train_test_sets(et_x, y, 0.2)
+bv_X_train, Y_train, bv_X_test, Y_test = feature_extraction.create_train_test_sets(bv_x, y, 0.3)
+et_X_train, Y_train, et_X_test, Y_test = feature_extraction.create_train_test_sets(et_x, y, 0.3)
 
 # print(len(et_X_train), len(Y_train), len(et_X_test), len(Y_test))
 
@@ -204,7 +265,7 @@ print('Classification Report:')
 print(classification_report(Y_test, Y_pred, target_names=event_dict.keys()))
 
 ###############  K-nearest neighbors classification
-k_range = np.arange(1,20)
+k_range = np.arange(1,8)
 weight_fuc = ['uniform', 'distance']
 opt_KNN_param = []
 acc_max = 0
@@ -304,25 +365,3 @@ print('Confusion Matrix:')
 print(confusion_matrix(Y_test, opt_Y_pred))
 print('Classification Report:')
 print(classification_report(Y_test, opt_Y_pred, target_names=event_dict.keys()))
-# Assess the results
-###### Archive
-# print(y)
-# all_events = mne.concatenate_events(events_list)[:,2]
-# print(all_events.shape)
-# print(y == all_events)
-# print(x)
-# print(x.size)
-# print(len(x))
-# print(x.shape)
-# print(type(y_bv))
-
-        # et_epochs = mne.Epochs(raw=raw.et_raw, events=nback_events, event_id=event_dict, tmin=-0.2, tmax=1.8, preload=True, picks='eeg')
-        # print(bv_epochs)
-        # print(et_epochs)
-        # zeroback_epochs = bv_epochs['0-back']
-        # fig = bv_epochs['0-back'].plot_image(picks='eeg',combine='mean')
-        # fig = bv_epochs['1-back'].plot_image(picks='eeg',combine='mean')00
-        # fig = bv_epochs['2-back'].plot_image(picks='eeg',combine='mean')
-        # plt.show()
-        # break
-        

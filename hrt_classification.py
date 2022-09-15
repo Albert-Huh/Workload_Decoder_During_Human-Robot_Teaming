@@ -30,39 +30,21 @@ et_epochs_list = []
 events_list = []
 
 for file_name in raw_data_list:
-    if file_name.endswith('.fif') and file_name.startswith('071422_Dual_Nback_Test_CG_PM_1'): #startswith('date_Dual') can isolate experiment session  ('Dual', 7, 11) '070622_Dual' 062922_Dual, note for071422_Dual'Dual_Nback_Test_AR',7,25 
-        # Note for Kaz: try EJ and CG and save the results 'Dual_Nback_Test_CG',7,25
+    if file_name.endswith('.fif') and file_name.startswith('081922_HRT_Sim_AR_1'): # 081922_HRT_Sim_AR_1
         raw_path_annot = os.path.join(os.path.join(os.getcwd(), 'data/raw_data'), file_name)
         montage_path = os.path.join(os.getcwd(), 'data/Workspaces_Montages/active electrodes/actiCAP for LiveAmp 32 Channel','CLA-32.bvef')
         raw_annot = setup(raw_path_annot, montage_path, mode='Binary')
         onset, duration, description = raw_annot.get_annotation_info()
         print(description)
         raw_path = os.path.join(os.path.join(os.getcwd(), 'data/raw_data'), file_name.replace('.fif','.vhdr'))
-        raw = setup(raw_path, montage_path, mode='Dual')
+        raw = setup(raw_path, montage_path, mode='E-tattoo')
         raw.set_annotation(raw.raw, onset=onset, duration=duration, description=description)
-        # raw.get_brainvision_raw()
-        # raw.get_e_tattoo_raw()
-        # fig = raw.bv_raw.plot()
-        # fig = raw.et_raw.plot()
-        # plt.show()
-        raw.get_brainvision_raw()
-        raw.bv_raw.load_data()
-        raw.bv_raw.set_eeg_reference('average')
-        raw.get_e_tattoo_raw()
         raw.et_raw.load_data()
-        raw.et_raw.set_eeg_reference(ref_channels=['A1', 'A2'])
+        raw.et_raw.set_eeg_reference(ref_channels=['A1'])
 
-        bv_filters = preprocessing.Filtering(raw.bv_raw, l_freq=1, h_freq=50)
-        raw.bv_raw = bv_filters.external_artifact_rejection()
         et_filters = preprocessing.Filtering(raw.et_raw, l_freq=1, h_freq=50)
         raw.et_raw = et_filters.external_artifact_rejection()
 
-        # raw.get_brainvision_raw()
-        # raw.get_e_tattoo_raw()
-        # fig = raw.bv_raw.plot()
-        # fig = raw.et_raw.plot()
-        # plt.show()
-        # print(raw.raw.info['meas_date'])
         meas_date = str(raw.raw.info['meas_date'])
         recorder_meas_time = meas_date[0:4]+meas_date[5:7]+meas_date[8:10]+meas_date[11:19].replace(':','')
         report_list = os.listdir(os.path.join(os.getcwd(), 'data/reports'))
@@ -72,17 +54,14 @@ for file_name in raw_data_list:
             if abs(int(recorder_meas_time)-int(report_log_time)) < 60:
                 resampled_freq = 200
                 # print(report_path)
-                nback_events = raw.get_events_from_nback_report(report_path=report_path, fs=resampled_freq)
-        event_dict = {'0-back': 0, '1-back': 1, '2-back': 2}
-        # fig = mne.viz.plot_events(nback_events, event_id=event_dict, sfreq=resampled_freq, first_samp=raw.bv_raw.first_samp)
-        
-        bv_ica = preprocessing.Indepndent_Component_Analysis(raw.bv_raw, n_components=8)
+                hrt_events = raw.get_events_from_hrt_report(report_path=report_path, fs=resampled_freq)
+        event_dict = {'Low': 1, 'Intermediate': 2, 'High': 3}
+        fig = mne.viz.plot_events(hrt_events, event_id=event_dict, sfreq=resampled_freq, first_samp=raw.et_raw.first_samp)
+        # print(hrt_events)
         et_ica = preprocessing.Indepndent_Component_Analysis(raw.et_raw, n_components=4)
 
-        bv_eog_evoked = bv_ica.create_physiological_evoked()
         et_eog_evoked = et_ica.create_physiological_evoked()
 
-        bv_ica.perfrom_ICA()
         et_ica.perfrom_ICA()
         # fig = raw.bv_raw.plot()
         # fig = raw.et_raw.plot()
@@ -91,53 +70,19 @@ for file_name in raw_data_list:
         # del raw.bv_raw, raw.et_raw
         # raw.bv_raw.load_data()
         # raw.et_raw.load_data()
-        '''
-        bv_theta = preprocessing.Filtering(raw.bv_raw, 4, 7)
-        bv_alpha = preprocessing.Filtering(raw.bv_raw, 8, 13)
-        bv_beta = preprocessing.Filtering(raw.bv_raw, 14, 30)
-        bv_theta_raw = bv_theta.bandpass()
-        bv_alpha_raw = bv_alpha.bandpass()
-        bv_beta_raw = bv_beta.bandpass()
-        fig = bv_theta_raw.plot()
-        fig = bv_alpha_raw.plot()
-        fig = bv_beta_raw.plot()
-        plt.show()
 
-        bv_theta_epochs = mne.Epochs(bv_theta_raw, events=nback_events, event_id=event_dict, tmin=-0.2, tmax=1.8, preload=True, picks='eeg')
-        bv_alpha_epochs = mne.Epochs(bv_alpha_raw, events=nback_events, event_id=event_dict, tmin=-0.2, tmax=1.8, preload=True, picks='eeg')
-        bv_beta_epochs = mne.Epochs(bv_beta_raw, events=nback_events, event_id=event_dict, tmin=-0.2, tmax=1.8, preload=True, picks='eeg')
-        fig = bv_alpha_epochs['0-back'].plot_image(picks='eeg',combine='mean')
-        fig = bv_alpha_epochs['1-back'].plot_image(picks='eeg',combine='mean')
-        fig = bv_alpha_epochs['2-back'].plot_image(picks='eeg',combine='mean')
-        fig = bv_beta_epochs['0-back'].plot_image(picks='eeg',combine='mean')
-        fig = bv_beta_epochs['1-back'].plot_image(picks='eeg',combine='mean')
-        fig = bv_beta_epochs['2-back'].plot_image(picks='eeg',combine='mean')
-        fig = bv_theta_epochs['0-back'].plot_image(picks='eeg',combine='mean')
-        fig = bv_theta_epochs['1-back'].plot_image(picks='eeg',combine='mean')
-        fig = bv_theta_epochs['2-back'].plot_image(picks='eeg',combine='mean')
-        '''
-
-        bv_epochs = mne.Epochs(raw=raw.bv_raw, events=nback_events, event_id=event_dict, tmin=-0.2, tmax=1.8, preload=True, picks='eeg')
-        bv_epochs.equalize_event_counts()
-        bv_epochs_list.append(bv_epochs)
-        et_epochs = mne.Epochs(raw=raw.et_raw, events=nback_events, event_id=event_dict, tmin=-0.2, tmax=1.8, preload=True, picks=['Fp1','Fp2','F7','F8'])
+        et_epochs = mne.Epochs(raw=raw.et_raw, events=hrt_events, event_id=event_dict, tmin=-2.5, tmax=2.5, preload=True, picks=['Fp1','Fp2','F7','F8'])
         et_epochs.equalize_event_counts()
         et_epochs_list.append(et_epochs)
-        events_list.append(nback_events)
+        events_list.append(hrt_events)
 
 # all_events = mne.concatenate_events(events_list)
-
-all_bv_epochs = mne.concatenate_epochs(bv_epochs_list)
 all_et_epochs = mne.concatenate_epochs(et_epochs_list)
-# print(len(all_bv_epochs))
-# print(len(all_et_epochs))
-bv_x = feature_extraction.eeg_power_band(all_bv_epochs, mean=False)
 et_x = feature_extraction.eeg_power_band(all_et_epochs,mean=False)
-print(bv_x.shape)
 print(et_x.shape)
-y = all_bv_epochs.events[:,2]
+print(et_x.shape)
+y = all_et_epochs.events[:,2]
 print(y.shape)
-bv_X_train, Y_train, bv_X_test, Y_test = feature_extraction.create_train_test_sets(bv_x, y, 0.2)
 et_X_train, Y_train, et_X_test, Y_test = feature_extraction.create_train_test_sets(et_x, y, 0.2)
 
 # print(len(et_X_train), len(Y_train), len(et_X_test), len(Y_test))
@@ -147,19 +92,6 @@ et_X_train, Y_train, et_X_test, Y_test = feature_extraction.create_train_test_se
 ############### Random forest classification
 # pipe_RF = make_pipeline(FunctionTransformer(feature_extraction.eeg_power_band, validate=False), RandomForestClassifier(n_estimators=100, random_state=42))
 pipe_RF = make_pipeline(RandomForestClassifier(n_estimators=50, random_state=42))
-pipe_RF.fit(bv_X_train, Y_train)
-
-# Test
-Y_pred = pipe_RF.predict(bv_X_test)
-# Assess the results
-acc = accuracy_score(Y_test, Y_pred)
-print('BV Random Forest Classifier')
-print('Accuracy score: {}'.format(acc))
-print('Confusion Matrix:')
-print(confusion_matrix(Y_test, Y_pred))
-print('Classification Report:')
-print(classification_report(Y_test, Y_pred, target_names=event_dict.keys()))
-
 # ET ver
 pipe_RF.fit(et_X_train, Y_train)
 
@@ -176,20 +108,7 @@ print(classification_report(Y_test, Y_pred, target_names=event_dict.keys()))
 
 ############### Linear discriminant analysis
 oa = OAS(store_precision=False, assume_centered=False)
-# pipe_LDA = make_pipeline(FunctionTransformer(feature_extraction.eeg_power_band, validate=False), LinearDiscriminantAnalysis(solver="lsqr", covariance_estimator=oa))
 pipe_LDA = make_pipeline(LinearDiscriminantAnalysis(solver="lsqr", covariance_estimator=oa))
-pipe_LDA.fit(bv_X_train, Y_train)
-# Test
-Y_pred = pipe_LDA.predict(bv_X_test)
-# Assess the results
-acc = accuracy_score(Y_test, Y_pred)
-print('BV Linear Discriminant Analysis')
-print('Accuracy score: {}'.format(acc))
-print('Confusion Matrix:')
-print(confusion_matrix(Y_test, Y_pred))
-print('Classification Report:')
-print(classification_report(Y_test, Y_pred, target_names=event_dict.keys()))
-
 # ET
 pipe_LDA.fit(et_X_train, Y_train)
 # Test
@@ -206,30 +125,6 @@ print(classification_report(Y_test, Y_pred, target_names=event_dict.keys()))
 ###############  K-nearest neighbors classification
 k_range = np.arange(1,20)
 weight_fuc = ['uniform', 'distance']
-opt_KNN_param = []
-acc_max = 0
-opt_Y_pred = []
-for KNN_param in [(x, y) for x in k_range for y in weight_fuc]:
-    pipe_KNN = make_pipeline(KNeighborsClassifier(n_neighbors=KNN_param[0],weights=KNN_param[1]))
-    pipe_KNN.fit(bv_X_train, Y_train)
-    # Test
-    Y_pred = pipe_KNN.predict(bv_X_test)
-    # Assess the results
-    acc = accuracy_score(Y_test, Y_pred)
-    f1 = f1_score(Y_test, Y_pred, average='weighted', labels=np.unique(Y_pred))
-    if acc_max < acc and f1 > 0.0:
-        acc_max = acc
-        opt_KNN_param = KNN_param
-        opt_Y_pred = Y_pred
-
-print('BV KNN Classifier')
-print(opt_KNN_param)
-print('Accuracy score: {}'.format(acc))
-print('Confusion Matrix:')
-print(confusion_matrix(Y_test, opt_Y_pred))
-print('Classification Report:')
-print(classification_report(Y_test, opt_Y_pred, target_names=event_dict.keys()))
-
 # ET
 opt_KNN_param = []
 acc_max = 0
@@ -258,29 +153,6 @@ print(classification_report(Y_test, opt_Y_pred, target_names=event_dict.keys()))
 ############### Support vector machine
 C_range = np.logspace(-2, 10, 13)
 gamma_range = np.logspace(-9, 3, 13)
-opt_C_gamma_param = []
-acc_max = 0
-opt_Y_pred = []
-for C_gamma_param in [(x, y) for x in C_range for y in gamma_range]:
-    pipe_SVM = make_pipeline(StandardScaler(), SVC(kernel='rbf',C=C_gamma_param[0],gamma=C_gamma_param[1]))
-    pipe_SVM.fit(bv_X_train, Y_train)
-    # Test
-    Y_pred = pipe_SVM.predict(bv_X_test)
-    acc = accuracy_score(Y_test, Y_pred)
-    f1 = f1_score(Y_test, Y_pred, average='weighted', labels=np.unique(Y_pred))
-    if acc_max < acc and f1 > 0.0:
-        acc_max = acc
-        opt_C_gamma_param = C_gamma_param
-        opt_Y_pred = Y_pred
-
-print('BV SVM Classifier')
-print(opt_C_gamma_param)
-print('Accuracy score: {}'.format(acc_max))
-print('Confusion Matrix:')
-print(confusion_matrix(Y_test, opt_Y_pred))
-print('Classification Report:')
-print(classification_report(Y_test, opt_Y_pred, target_names=event_dict.keys()))
-
 # ET
 opt_C_gamma_param = []
 acc_max = 0
