@@ -21,8 +21,8 @@ def eeg_power_band(epochs, mean = False):
         Transformed data.
     """
     # specific frequency bands
-    FREQ_BANDS = {"delta": [1.0, 5.0],
-                  "theta": [5.0, 8.0],
+    FREQ_BANDS = {"delta": [1.0, 4.0],
+                  "theta": [4.0, 8.0],
                   "alpha": [8.0, 13.0],
                   "beta1": [13.0, 16.0],
                   "beta2": [16.0, 30.0]}
