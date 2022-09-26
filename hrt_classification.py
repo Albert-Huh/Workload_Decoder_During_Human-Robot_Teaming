@@ -1,6 +1,7 @@
 import sys
 import os
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 import mne
 from setup import Setup as setup
@@ -55,7 +56,7 @@ for file_name in raw_data_list:
                 resampled_freq = 200
                 # print(report_path)
                 hrt_events = raw.get_events_from_hrt_report(report_path=report_path, fs=resampled_freq)
-        event_dict = {'Low': 1, 'Intermediate': 2, 'High': 3}
+        event_dict = {'Low': 1, 'Medium': 2, 'High': 3}
         fig = mne.viz.plot_events(hrt_events, event_id=event_dict, sfreq=resampled_freq, first_samp=raw.et_raw.first_samp)
         # print(hrt_events)
         et_ica = preprocessing.Indepndent_Component_Analysis(raw.et_raw, n_components=4)
@@ -85,7 +86,34 @@ y = all_et_epochs.events[:,2]
 print(y.shape)
 et_X_train, Y_train, et_X_test, Y_test = feature_extraction.create_train_test_sets(et_x, y, 0.2)
 
+'''
+freqs = np.logspace(*np.log10([1, 30]), num=8)
+n_cycles = freqs / 2.  # different number of cycle per frequency
+power, itc = mne.time_frequency.tfr_morlet(all_et_epochs['High'], freqs=freqs, n_cycles=n_cycles, use_fft=True, return_itc=True, decim=3)
+fig, axis = plt.subplots(1, 2, figsize=(7, 4))
+power.plot_topomap(fmin=8, fmax=13, mode='mean', axes=axis[0], title='Eye-Open Alpha (8-13 Hz)', show=False)
+power.plot_topomap(fmin=8, fmax=13, mode='mean', axes=axis[1], title='Eye-Closed Alpha (8-13 Hz)', show=False)
+mne.viz.tight_layout()
+plt.show()
+
+power, itc = mne.time_frequency.tfr_morlet(all_et_epochs['Medium'], freqs=freqs, n_cycles=n_cycles, use_fft=True, return_itc=True, decim=3)
+power.plot_topo(baseline=None, mode='logratio', title='Average power')
+fig, axis = plt.subplots(1, 2, figsize=(7, 4))
+power.plot_topomap(ch_type='eeg', fmin=8, fmax=13, baseline=None, mode='mean', axes=axis[0], title='Alpha', show=False)
+power.plot_topomap(ch_type='eeg', fmin=4, fmax=8, baseline=None, mode='mean', axes=axis[1], title='Theta', show=False)
+mne.viz.tight_layout()
+plt.show()
+
+power, itc = mne.time_frequency.tfr_morlet(all_et_epochs['Low'], freqs=freqs, n_cycles=n_cycles, use_fft=True, return_itc=True, decim=3)
+power.plot_topo(baseline=None, mode='logratio', title='Average power')
+fig, axis = plt.subplots(1, 2, figsize=(7, 4))
+power.plot_topomap(ch_type='eeg', fmin=8, fmax=13, baseline=None, mode='mean', axes=axis[0], title='Alpha', show=False)
+power.plot_topomap(ch_type='eeg', fmin=4, fmax=8, baseline=None, mode='mean', axes=axis[1], title='Theta', show=False)
+mne.viz.tight_layout()
+plt.show()
+'''
 # print(len(et_X_train), len(Y_train), len(et_X_test), len(Y_test))
+
 
 
 ############### CLASSIFICATION ###############
