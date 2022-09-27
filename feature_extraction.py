@@ -24,8 +24,8 @@ def eeg_power_band(epochs, mean = False):
     FREQ_BANDS = {"delta": [1.0, 4.0],
                   "theta": [4.0, 8.0],
                   "alpha": [8.0, 13.0],
-                  "beta1": [13.0, 16.0],
-                  "beta2": [16.0, 30.0]}
+                  "beta_low": [13.0, 16.0],
+                  "beta_high": [16.0, 30.0]}
 
     psds, freqs = mne.time_frequency.psd_welch(epochs, picks='eeg', fmin=1.0, fmax=30)
     

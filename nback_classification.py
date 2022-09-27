@@ -24,73 +24,77 @@ from sklearn.metrics import classification_report
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import FunctionTransformer
 
+# list of paths of raw data in local data folder
 raw_data_list = os.listdir(os.path.join(os.getcwd(), 'data/raw_data'))
+# initilize epoch and event lists
 bv_epochs_list = []
 et_epochs_list = []
 events_list = []
 
+############### IMPORT DATA & SIGNAL PROCESSING ###############
 for file_name in raw_data_list:
-    if file_name.endswith('.fif') and file_name.startswith('071422_Dual_Nback_Test_CG_PM_1'): #startswith('date_Dual') can isolate experiment session  ('Dual', 7, 11) '070622_Dual' 062922_Dual, note for071422_Dual'Dual_Nback_Test_AR',7,25 
-        # Note for Kaz: try EJ and CG and save the results 'Dual_Nback_Test_CG',7,25
+    if file_name.endswith('.fif') and file_name.startswith('071422_Dual_Nback_Test_CG_PM_1'):
+        # files with .fif format are manually inspected filtered raw data
+        # import the annotations about BAD (artifact contaminated) channels and segments from .fif
         raw_path_annot = os.path.join(os.path.join(os.getcwd(), 'data/raw_data'), file_name)
-        montage_path = os.path.join(os.getcwd(), 'data/Workspaces_Montages/active electrodes/actiCAP for LiveAmp 32 Channel','CLA-32.bvef')
         raw_annot = setup(raw_path_annot, montage_path, mode='Binary')
         onset, duration, description = raw_annot.get_annotation_info()
         print(description)
+
+        # import raw data from .vhdr file and montage from .bvef file
         raw_path = os.path.join(os.path.join(os.getcwd(), 'data/raw_data'), file_name.replace('.fif','.vhdr'))
+        montage_path = os.path.join(os.getcwd(), 'data/Workspaces_Montages/active electrodes/actiCAP for LiveAmp 32 Channel','CLA-32.bvef')
         raw = setup(raw_path, montage_path, mode='Dual')
+        # set custom annotations from .fif on the raw
         raw.set_annotation(raw.raw, onset=onset, duration=duration, description=description)
-        # raw.get_brainvision_raw()
-        # raw.get_e_tattoo_raw()
-        # fig = raw.bv_raw.plot()
-        # fig = raw.et_raw.plot()
-        # plt.show()
+        
+        # seperate fullhead EEG and forehead EEG raw and rerefernece them
         raw.get_brainvision_raw()
         raw.bv_raw.load_data()
-        raw.bv_raw.set_eeg_reference('average')
+        raw.bv_raw.set_eeg_reference('average') # CAR
         raw.get_e_tattoo_raw()
         raw.et_raw.load_data()
-        raw.et_raw.set_eeg_reference(ref_channels=['A1', 'A2'])
+        raw.et_raw.set_eeg_reference(ref_channels=['A1', 'A2']) # behind of ears reference
 
+        # raw data preprocessing: downsampling, nf, bpf
         bv_filters = preprocessing.Filtering(raw.bv_raw, l_freq=1, h_freq=50)
         raw.bv_raw = bv_filters.external_artifact_rejection()
         et_filters = preprocessing.Filtering(raw.et_raw, l_freq=1, h_freq=50)
         raw.et_raw = et_filters.external_artifact_rejection()
 
-        # raw.get_brainvision_raw()
-        # raw.get_e_tattoo_raw()
+        # eye blink artifact rejection through ICA
+        bv_ica = preprocessing.Indepndent_Component_Analysis(raw.bv_raw, n_components=8)
+        et_ica = preprocessing.Indepndent_Component_Analysis(raw.et_raw, n_components=4)
+        bv_eog_evoked = bv_ica.create_physiological_evoked()
+        et_eog_evoked = et_ica.create_physiological_evoked()
+        bv_ica.perfrom_ICA()
+        et_ica.perfrom_ICA()
+
+        # plot filtered raw data
         # fig = raw.bv_raw.plot()
         # fig = raw.et_raw.plot()
         # plt.show()
-        # print(raw.raw.info['meas_date'])
-        meas_date = str(raw.raw.info['meas_date'])
+
+        # create events from raw and nback game report timestamps
+        meas_date = str(raw.raw.info['meas_date']) # get raw data measurement timestamp
+        # text reformatting to compare later with nback event timestamps
         recorder_meas_time = meas_date[0:4]+meas_date[5:7]+meas_date[8:10]+meas_date[11:19].replace(':','')
+        # list of paths of nback reports in local data folder
         report_list = os.listdir(os.path.join(os.getcwd(), 'data/reports'))
         for report_name in report_list:
             report_path = os.path.join(os.path.join(os.getcwd(), 'data/reports'), report_name)
+            # get nback reportlog timestamp from file name
             report_log_time = report_path.split('_',1)[1][0:15].replace('_', '')
+            # search the nback report file that logged when the raw is recorded by comparing timestamps
             if abs(int(recorder_meas_time)-int(report_log_time)) < 60:
+                # get events from the nback report
                 resampled_freq = 200
-                # print(report_path)
                 nback_events = raw.get_events_from_nback_report(report_path=report_path, fs=resampled_freq)
+        # custom event dictionary
         event_dict = {'0-back': 0, '1-back': 1, '2-back': 2}
+        events_list.append(nback_events)
         # fig = mne.viz.plot_events(nback_events, event_id=event_dict, sfreq=resampled_freq, first_samp=raw.bv_raw.first_samp)
         
-        bv_ica = preprocessing.Indepndent_Component_Analysis(raw.bv_raw, n_components=8)
-        et_ica = preprocessing.Indepndent_Component_Analysis(raw.et_raw, n_components=4)
-
-        bv_eog_evoked = bv_ica.create_physiological_evoked()
-        et_eog_evoked = et_ica.create_physiological_evoked()
-
-        bv_ica.perfrom_ICA()
-        et_ica.perfrom_ICA()
-        # fig = raw.bv_raw.plot()
-        # fig = raw.et_raw.plot()
-        # plt.show()
-        # print(nback_event)
-        # del raw.bv_raw, raw.et_raw
-        # raw.bv_raw.load_data()
-        # raw.et_raw.load_data()
         '''
         bv_theta = preprocessing.Filtering(raw.bv_raw, 4, 7)
         bv_alpha = preprocessing.Filtering(raw.bv_raw, 8, 13)
@@ -116,21 +120,21 @@ for file_name in raw_data_list:
         fig = bv_theta_epochs['1-back'].plot_image(picks='eeg',combine='mean')
         fig = bv_theta_epochs['2-back'].plot_image(picks='eeg',combine='mean')
         '''
-
-        bv_epochs = mne.Epochs(raw=raw.bv_raw, events=nback_events, event_id=event_dict, tmin=-0.2, tmax=1.8, preload=True, picks='eeg')
-        bv_epochs.equalize_event_counts()
+        # create epochs from raw data with the events
+        bv_epochs = mne.Epochs(raw=raw.bv_raw, events=nback_events, event_id=event_dict, tmin=-0.2, tmax=1.8, preload=True, picks='eeg') # BAD epochs are automatically dropped
+        bv_epochs.equalize_event_counts() # equalize the num of epochs per event
         bv_epochs_list.append(bv_epochs)
-        et_epochs = mne.Epochs(raw=raw.et_raw, events=nback_events, event_id=event_dict, tmin=-0.2, tmax=1.8, preload=True, picks=['Fp1','Fp2','F7','F8'])
-        et_epochs.equalize_event_counts()
+        et_epochs = mne.Epochs(raw=raw.et_raw, events=nback_events, event_id=event_dict, tmin=-0.2, tmax=1.8, preload=True, picks=['Fp1','Fp2','F7','F8']) # BAD epochs are automatically dropped
+        et_epochs.equalize_event_counts() # equalize the num of epochs per event
         et_epochs_list.append(et_epochs)
-        events_list.append(nback_events)
 
-# all_events = mne.concatenate_events(events_list)
-
+# concatenate all epochs from different trials
 all_bv_epochs = mne.concatenate_epochs(bv_epochs_list)
 all_et_epochs = mne.concatenate_epochs(et_epochs_list)
 # print(len(all_bv_epochs))
 # print(len(all_et_epochs))
+
+############### FEATURE EXTRACTION & SELECTION ###############
 bv_x = feature_extraction.eeg_power_band(all_bv_epochs, mean=False)
 et_x = feature_extraction.eeg_power_band(all_et_epochs,mean=False)
 print(bv_x.shape)
@@ -304,25 +308,4 @@ print('Confusion Matrix:')
 print(confusion_matrix(Y_test, opt_Y_pred))
 print('Classification Report:')
 print(classification_report(Y_test, opt_Y_pred, target_names=event_dict.keys()))
-# Assess the results
-###### Archive
-# print(y)
-# all_events = mne.concatenate_events(events_list)[:,2]
-# print(all_events.shape)
-# print(y == all_events)
-# print(x)
-# print(x.size)
-# print(len(x))
-# print(x.shape)
-# print(type(y_bv))
-
-        # et_epochs = mne.Epochs(raw=raw.et_raw, events=nback_events, event_id=event_dict, tmin=-0.2, tmax=1.8, preload=True, picks='eeg')
-        # print(bv_epochs)
-        # print(et_epochs)
-        # zeroback_epochs = bv_epochs['0-back']
-        # fig = bv_epochs['0-back'].plot_image(picks='eeg',combine='mean')
-        # fig = bv_epochs['1-back'].plot_image(picks='eeg',combine='mean')00
-        # fig = bv_epochs['2-back'].plot_image(picks='eeg',combine='mean')
-        # plt.show()
-        # break
-        
+       
