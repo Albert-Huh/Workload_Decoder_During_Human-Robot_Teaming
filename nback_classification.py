@@ -23,27 +23,37 @@ from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import FunctionTransformer
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import cross_val_score
 
 # list of paths of raw data in local data folder
 raw_data_list = os.listdir(os.path.join(os.getcwd(), 'data/raw_data'))
 # initilize epoch and event lists
 bv_epochs_list = []
 et_epochs_list = []
+
+bv_theta_epochs_list = []
+bv_alpha_epochs_list = []
+bv_beta_epochs_list = []
+et_theta_epochs_list = []
+et_alpha_epochs_list = []
+et_beta_epochs_list = []
+
 events_list = []
 
 ############### IMPORT DATA & SIGNAL PROCESSING ###############
 for file_name in raw_data_list:
-    if file_name.endswith('.fif') and file_name.startswith('071422_Dual_Nback_Test_CG_PM_1'):
+    if file_name.endswith('.fif') and file_name.startswith('071422_Dual_Nback_Test_CG_PM'):
         # files with .fif format are manually inspected filtered raw data
         # import the annotations about BAD (artifact contaminated) channels and segments from .fif
         raw_path_annot = os.path.join(os.path.join(os.getcwd(), 'data/raw_data'), file_name)
+        montage_path = os.path.join(os.getcwd(), 'data/Workspaces_Montages/active electrodes/actiCAP for LiveAmp 32 Channel','CLA-32.bvef')
         raw_annot = setup(raw_path_annot, montage_path, mode='Binary')
         onset, duration, description = raw_annot.get_annotation_info()
         print(description)
 
         # import raw data from .vhdr file and montage from .bvef file
         raw_path = os.path.join(os.path.join(os.getcwd(), 'data/raw_data'), file_name.replace('.fif','.vhdr'))
-        montage_path = os.path.join(os.getcwd(), 'data/Workspaces_Montages/active electrodes/actiCAP for LiveAmp 32 Channel','CLA-32.bvef')
         raw = setup(raw_path, montage_path, mode='Dual')
         # set custom annotations from .fif on the raw
         raw.set_annotation(raw.raw, onset=onset, duration=duration, description=description)
@@ -63,8 +73,9 @@ for file_name in raw_data_list:
         raw.et_raw = et_filters.external_artifact_rejection()
 
         # eye blink artifact rejection through ICA
-        bv_ica = preprocessing.Indepndent_Component_Analysis(raw.bv_raw, n_components=8)
-        et_ica = preprocessing.Indepndent_Component_Analysis(raw.et_raw, n_components=4)
+        bv_ica = preprocessing.Indepndent_Component_Analysis(raw.bv_raw, n_components=12, seed=50)
+        et_ica = preprocessing.Indepndent_Component_Analysis(raw.et_raw, n_components=4, seed=50)
+        
         bv_eog_evoked = bv_ica.create_physiological_evoked()
         et_eog_evoked = et_ica.create_physiological_evoked()
         bv_ica.perfrom_ICA()
@@ -95,44 +106,98 @@ for file_name in raw_data_list:
         events_list.append(nback_events)
         # fig = mne.viz.plot_events(nback_events, event_id=event_dict, sfreq=resampled_freq, first_samp=raw.bv_raw.first_samp)
         
-        '''
         bv_theta = preprocessing.Filtering(raw.bv_raw, 4, 7)
         bv_alpha = preprocessing.Filtering(raw.bv_raw, 8, 13)
         bv_beta = preprocessing.Filtering(raw.bv_raw, 14, 30)
         bv_theta_raw = bv_theta.bandpass()
         bv_alpha_raw = bv_alpha.bandpass()
         bv_beta_raw = bv_beta.bandpass()
-        fig = bv_theta_raw.plot()
-        fig = bv_alpha_raw.plot()
-        fig = bv_beta_raw.plot()
-        plt.show()
+        # fig = bv_theta_raw.plot()
+        # fig = bv_alpha_raw.plot()
+        # fig = bv_beta_raw.plot()
+        # plt.show()
 
-        bv_theta_epochs = mne.Epochs(bv_theta_raw, events=nback_events, event_id=event_dict, tmin=-0.2, tmax=1.8, preload=True, picks='eeg')
-        bv_alpha_epochs = mne.Epochs(bv_alpha_raw, events=nback_events, event_id=event_dict, tmin=-0.2, tmax=1.8, preload=True, picks='eeg')
-        bv_beta_epochs = mne.Epochs(bv_beta_raw, events=nback_events, event_id=event_dict, tmin=-0.2, tmax=1.8, preload=True, picks='eeg')
-        fig = bv_alpha_epochs['0-back'].plot_image(picks='eeg',combine='mean')
-        fig = bv_alpha_epochs['1-back'].plot_image(picks='eeg',combine='mean')
-        fig = bv_alpha_epochs['2-back'].plot_image(picks='eeg',combine='mean')
-        fig = bv_beta_epochs['0-back'].plot_image(picks='eeg',combine='mean')
-        fig = bv_beta_epochs['1-back'].plot_image(picks='eeg',combine='mean')
-        fig = bv_beta_epochs['2-back'].plot_image(picks='eeg',combine='mean')
-        fig = bv_theta_epochs['0-back'].plot_image(picks='eeg',combine='mean')
-        fig = bv_theta_epochs['1-back'].plot_image(picks='eeg',combine='mean')
-        fig = bv_theta_epochs['2-back'].plot_image(picks='eeg',combine='mean')
-        '''
+        et_theta = preprocessing.Filtering(raw.et_raw, 4, 7)
+        et_alpha = preprocessing.Filtering(raw.et_raw, 8, 13)
+        et_beta = preprocessing.Filtering(raw.et_raw, 14, 30)
+        et_theta_raw = et_theta.bandpass()
+        et_alpha_raw = et_alpha.bandpass()
+        et_beta_raw = et_beta.bandpass()
+
+        bv_theta_epochs = mne.Epochs(bv_theta_raw, events=nback_events, event_id=event_dict, tmin=-0.5, tmax=2.0, preload=True, picks='eeg')
+        bv_alpha_epochs = mne.Epochs(bv_alpha_raw, events=nback_events, event_id=event_dict, tmin=-0.5, tmax=2.0, preload=True, picks='eeg')
+        bv_beta_epochs = mne.Epochs(bv_beta_raw, events=nback_events, event_id=event_dict, tmin=-0.5, tmax=2.0, preload=True, picks='eeg')
+
+        et_theta_epochs = mne.Epochs(et_theta_raw, events=nback_events, event_id=event_dict, tmin=-0.5, tmax=2.0, preload=True, picks='eeg')
+        et_alpha_epochs = mne.Epochs(et_alpha_raw, events=nback_events, event_id=event_dict, tmin=-0.5, tmax=2.0, preload=True, picks='eeg')
+        et_beta_epochs = mne.Epochs(et_beta_raw, events=nback_events, event_id=event_dict, tmin=-0.5, tmax=2.0, preload=True, picks='eeg')
+
         # create epochs from raw data with the events
-        bv_epochs = mne.Epochs(raw=raw.bv_raw, events=nback_events, event_id=event_dict, tmin=-0.2, tmax=1.8, preload=True, picks='eeg') # BAD epochs are automatically dropped
+        bv_epochs = mne.Epochs(raw=raw.bv_raw, events=nback_events, event_id=event_dict, tmin=-0.5, tmax=2.0, preload=True, picks='eeg') # BAD epochs are automatically dropped
         bv_epochs.equalize_event_counts() # equalize the num of epochs per event
         bv_epochs_list.append(bv_epochs)
-        et_epochs = mne.Epochs(raw=raw.et_raw, events=nback_events, event_id=event_dict, tmin=-0.2, tmax=1.8, preload=True, picks=['Fp1','Fp2','F7','F8']) # BAD epochs are automatically dropped
+        et_epochs = mne.Epochs(raw=raw.et_raw, events=nback_events, event_id=event_dict, tmin=-0.5, tmax=2.0, preload=True, picks=['Fp1','Fp2','F7','F8']) # BAD epochs are automatically dropped
         et_epochs.equalize_event_counts() # equalize the num of epochs per event
         et_epochs_list.append(et_epochs)
+
+        bv_epochs_list.append(bv_epochs)
+        et_epochs_list.append(et_epochs)
+        bv_theta_epochs_list.append(bv_theta_epochs)
+        bv_alpha_epochs_list.append(bv_alpha_epochs)
+        bv_beta_epochs_list.append(bv_beta_epochs)
+        et_theta_epochs_list.append(et_theta_epochs)
+        et_alpha_epochs_list.append(et_alpha_epochs)
+        et_beta_epochs_list.append(et_beta_epochs)
 
 # concatenate all epochs from different trials
 all_bv_epochs = mne.concatenate_epochs(bv_epochs_list)
 all_et_epochs = mne.concatenate_epochs(et_epochs_list)
+
+all_bv_theta_epochs = mne.concatenate_epochs(bv_theta_epochs_list)
+all_bv_alpha_epochs = mne.concatenate_epochs(bv_alpha_epochs_list)
+all_bv_beta_epochs = mne.concatenate_epochs(bv_beta_epochs_list)
+all_et_theta_epochs = mne.concatenate_epochs(et_theta_epochs_list)
+all_et_alpha_epochs = mne.concatenate_epochs(et_alpha_epochs_list)
+all_et_beta_epochs = mne.concatenate_epochs(et_beta_epochs_list)
+
+# epoch analysis
+bv_0back = all_bv_epochs['0-back'].average()
+bv_1back = all_bv_epochs['1-back'].average()
+bv_2back = all_bv_epochs['2-back'].average()
+et_0back = all_et_epochs['0-back'].average()
+et_1back = all_et_epochs['1-back'].average()
+et_2back = all_et_epochs['2-back'].average()
+
+for evk in [bv_0back, bv_1back, bv_2back, et_0back, et_1back, et_2back]:
+        # global field power and spatial plot
+        evk.plot(gfp=True, spatial_colors=True, ylim=dict(eeg=[-4, 4]))
+        # spatial plot + topomap
+        # evk.plot_joint()
+# evokeds = dict(bv_evoked=list(all_bv_epochs), et_evoked=list(all_et_epochs))
+# mne.viz.plot_compare_evokeds(evokeds, picks='eeg')
+
 # print(len(all_bv_epochs))
 # print(len(all_et_epochs))
+
+fig = all_bv_alpha_epochs['0-back'].plot_image(picks='eeg',combine='mean')
+fig = all_bv_alpha_epochs['1-back'].plot_image(picks='eeg',combine='mean')
+fig = all_bv_alpha_epochs['2-back'].plot_image(picks='eeg',combine='mean')
+fig = all_bv_beta_epochs['0-back'].plot_image(picks='eeg',combine='mean')
+fig = all_bv_beta_epochs['1-back'].plot_image(picks='eeg',combine='mean')
+fig = all_bv_beta_epochs['2-back'].plot_image(picks='eeg',combine='mean')
+fig = all_bv_theta_epochs['0-back'].plot_image(picks='eeg',combine='mean')
+fig = all_bv_theta_epochs['1-back'].plot_image(picks='eeg',combine='mean')
+fig = all_bv_theta_epochs['2-back'].plot_image(picks='eeg',combine='mean')
+
+fig = all_et_alpha_epochs['0-back'].plot_image(picks='eeg',combine='mean')
+fig = all_et_alpha_epochs['1-back'].plot_image(picks='eeg',combine='mean')
+fig = all_et_alpha_epochs['2-back'].plot_image(picks='eeg',combine='mean')
+fig = all_et_beta_epochs['0-back'].plot_image(picks='eeg',combine='mean')
+fig = all_et_beta_epochs['1-back'].plot_image(picks='eeg',combine='mean')
+fig = all_et_beta_epochs['2-back'].plot_image(picks='eeg',combine='mean')
+fig = all_et_theta_epochs['0-back'].plot_image(picks='eeg',combine='mean')
+fig = all_et_theta_epochs['1-back'].plot_image(picks='eeg',combine='mean')
+fig = all_et_theta_epochs['2-back'].plot_image(picks='eeg',combine='mean')
 
 ############### FEATURE EXTRACTION & SELECTION ###############
 bv_x = feature_extraction.eeg_power_band(all_bv_epochs, mean=False)
@@ -143,6 +208,8 @@ y = all_bv_epochs.events[:,2]
 print(y.shape)
 bv_X_train, Y_train, bv_X_test, Y_test = feature_extraction.create_train_test_sets(bv_x, y, 0.2)
 et_X_train, Y_train, et_X_test, Y_test = feature_extraction.create_train_test_sets(et_x, y, 0.2)
+
+
 
 # print(len(et_X_train), len(Y_train), len(et_X_test), len(Y_test))
 
@@ -307,5 +374,4 @@ print('Accuracy score: {}'.format(acc_max))
 print('Confusion Matrix:')
 print(confusion_matrix(Y_test, opt_Y_pred))
 print('Classification Report:')
-print(classification_report(Y_test, opt_Y_pred, target_names=event_dict.keys()))
-       
+print(classification_report(Y_test, opt_Y_pred, target_names=event_dict.keys()))    

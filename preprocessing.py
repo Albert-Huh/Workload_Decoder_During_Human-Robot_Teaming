@@ -60,7 +60,8 @@ class Filtering:
     def resample(self,new_sfreq=None, window='boxcar', events=None, verbose='warning'):
         
         if new_sfreq == None:
-            new_sfreq = 4*self.h_freq
+            new_sfreq = 5*self.h_freq
+            self.sfreq = new_sfreq
         elif new_sfreq > self.sfreq:
             print('Error: New sampling frequency is greather than previous sampling freqeuncy. (Recommended new_f_s = 4 x high_f_c)')
             return
@@ -86,10 +87,9 @@ class Filtering:
 
     def external_artifact_rejection(self):
         self.raw.load_data()
-        self.raw = self.highpass()
+        self.raw = self.resample()
         self.raw = self.notch()
-        self.raw = self.lowpass()
-        filt_raw = self.resample()
+        filt_raw = self.bandpass()
         return filt_raw
     
 class Indepndent_Component_Analysis:
@@ -113,7 +113,7 @@ class Indepndent_Component_Analysis:
         
     def visualize_ICA_components(self):
         
-        self.ica.plot_components
+        self.ica.plot_components()
         plt.show()
         self.ica.plot_sources(self.raw)
         # col = self.n_components if self.n_components < 4 else 4
@@ -129,7 +129,7 @@ class Indepndent_Component_Analysis:
     def create_physiological_evoked(self, baseline=(-0.5, -0.2), verbose='warning'):
 
         if self.find_eog_peaks == True:
-            eog_evoked = mne.preprocessing.create_eog_epochs(self.raw, picks='eeg', 
+            eog_evoked = mne.preprocessing.create_eog_epochs(self.raw, ch_name='EOG', picks='eeg', 
             baseline=baseline, verbose=verbose).average()
             self.eog_evoked = eog_evoked
         if self.find_ecg_peaks == True:
@@ -161,6 +161,9 @@ class Indepndent_Component_Analysis:
                 # plot ICs applied to raw data, with EOG matches highlighted
                 self.ica.plot_sources(self.raw)
                 plt.show()
+                # plot ICs applied to the averaged EOG epochs, with EOG matches highlighted
+                self.ica.plot_sources(self.eog_evoked)
+                plt.show()
         else:
             print('Warning: EOG indices were not found.')
         if self.find_ecg_peaks == True:
@@ -185,9 +188,14 @@ class Indepndent_Component_Analysis:
         # self.visualize_ICA_components() # Comment while debugging
         eog_indices, _, ecg_indices, _ = self.find_physiological_artifacts(
             eog_treshold=0.6, ecg_treshold='auto', reject_by_annotation=True,
-            measure='correlation', plot_fig=True, verbose='warning')
+            measure='correlation', plot_fig=False, verbose='warning')
         print(eog_indices + ecg_indices)
+        # self.visualize_ICA_components()
         self.exclude_ica(eog_indices + ecg_indices)
         self.ica.apply(self.raw)
+        print('flag')
+        exclude = list(input('Components to exclude: ').split(','))
+        self.ica.exclude = [int(x) for x in exclude]
+        print(self.ica.exclude)
         self.ica.plot_overlay(self.raw, exclude=self.ica.exclude, picks='eeg')
         # return self.raw
