@@ -43,7 +43,7 @@ events_list = []
 
 ############### IMPORT DATA & SIGNAL PROCESSING ###############
 for file_name in raw_data_list:
-    if file_name.endswith('.fif') and file_name.startswith('071422_Dual_Nback_Test_CG_PM'):
+    if file_name.endswith('.fif') and file_name.startswith('071422_Dual_Nback_Test_CG_PM_1'):
         # files with .fif format are manually inspected filtered raw data
         # import the annotations about BAD (artifact contaminated) channels and segments from .fif
         raw_path_annot = os.path.join(os.path.join(os.getcwd(), 'data/raw_data'), file_name)
@@ -211,8 +211,8 @@ et_X_train, Y_train, et_X_test, Y_test = feature_extraction.create_train_test_se
 
 
 
-# print(len(et_X_train), len(Y_train), len(et_X_test), len(Y_test))
-
+print(len(et_X_train), len(Y_train), len(et_X_test), len(Y_test))
+print(et_X_train.shape, Y_train.shape, et_X_test.shape, Y_test.shape)
 
 ############### CLASSIFICATION ###############
 ############### Random forest classification

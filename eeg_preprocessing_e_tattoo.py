@@ -8,44 +8,40 @@ import matplotlib.pyplot as plt
 import mne
 matplotlib.use('TkAgg')
 
-# read files
+###################### Set up ######################
+# read raw data and moontage from vhdr and bvef files
 raw_path = os.path.join(os.getcwd(), 'data/raw_data', '070622_Eye_OC_Test_CG_AM_1.vhdr')
 montage_path = os.path.join(os.getcwd(), 'data/Workspaces_Montages/active electrodes/actiCAP for LiveAmp 32 Channel','CLA-32.bvef')
+
+# import raw data
 raw = mne.io.read_raw_brainvision(raw_path)
 raw.set_channel_types({'EOG':'eog'})
-print(raw.annotations.onset)
-# raw.annotations.onset[:] = [0, 60.371, 120.59]
-# raw.annotations.onset[:] = [0, 30.854, 59.998, 90, 119.9, 149.42, 180.9] # 063022_Eye_OC_Test_AR_AM_1_test.vhdr
-print(raw.info['meas_date'])
-# raw.plot(block=True)
 
-# raw.set_eeg_reference(ref_channels=['A1', 'A2']) #channels are missing
-# raw.plot(block=True)
+# define whole-head eeg raw
 bv_raw = raw.copy().pick_channels(['Fp1','Fp2','Fz','F3','F4','F7','F8','Cz','C3','C4','T7','T8','Pz','P3','P4','P7','P8','O1','O2','EOG'])
 bv_raw.load_data()
+# apply common average reference (CAR)
 bv_raw.set_eeg_reference('average')
-# bv_raw.plot(block=True)
 
+# define e-tattoo eeg raw
 et_raw = raw.copy().pick_channels(['Fp1_ET','Fp2_ET','F7_ET','F8_ET','A1','A2','EOG'])
 # use average of mastoid channels as reference
 et_raw.load_data()
 et_raw.set_eeg_reference(ref_channels=['A1', 'A2'])
-# et_raw.plot(block=True)
+# dropping '_ET' from the e-tattoo channels
 new_names = dict(
     (ch_name,
      ch_name.replace('_ET', ''))
     for ch_name in et_raw.ch_names)
 et_raw.rename_channels(new_names)
 
+# import custom montage
 montage = mne.channels.read_custom_montage(montage_path)
 bv_raw.set_montage(montage)
 fig = bv_raw.plot_sensors(show_names=True)
 
-# print(montage.get_positions())
-et_montage = montage.copy()
-fig = et_raw.plot_sensors(show_names=True)
+###################### Data Preprocessing ######################
 
-# data preprocessing
 bv_filt_raw = bv_raw.copy().filter(l_freq=1, h_freq=None, picks=['eeg','eog'] )
 bv_filt_raw = bv_filt_raw.notch_filter(freqs=(60, 120, 180),method='spectrum_fit',filter_length='auto',phase='zero',picks=['eeg','eog'])
 bv_filt_raw = bv_filt_raw.filter(None, 50, fir_design='firwin',picks=['eeg','eog'])
@@ -54,8 +50,7 @@ et_filt_raw = et_raw.copy().filter(l_freq=1, h_freq=None, picks=['eeg','eog'] )
 et_filt_raw = et_filt_raw.notch_filter(freqs=(60, 120, 180),method='spectrum_fit',filter_length='auto',phase='zero',picks=['eeg','eog'])
 et_filt_raw = et_filt_raw.filter(None, 50, fir_design='firwin',picks=['eeg','eog'])
 
-# preprocessed raw
-# filt_raw.set_eeg_reference(ref_channels=['A1', 'A2'])
+# plot preprocessed raw
 bv_filt_raw.plot(block=True)
 et_filt_raw.plot(block=True)
 
@@ -65,7 +60,6 @@ et_filt_raw.plot(block=True)
 # bv_filt_raw.copy().crop(91, 101).plot_psd(fmax=50,average=True)
 # eeg = bv_filt_raw.copy().pick_types(eeg=True)
 
-# TODO: pub quality figures
 '''
 # create EOG epoch for correction
 eog_epochs = mne.preprocessing.create_eog_epochs(filt_raw, ch_name='EOG', baseline=(-0.5, -0.3))
