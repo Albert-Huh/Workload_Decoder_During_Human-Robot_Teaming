@@ -9,7 +9,7 @@ import read_nback_report as nback
 import read_hrt_report as hrt
 
 import mne
-matplotlib.use('TkAgg')
+# matplotlib.use('TkAgg')
 
 class Setup:
     def __init__(self, raw_path=None, montage_path=None, mode=None):

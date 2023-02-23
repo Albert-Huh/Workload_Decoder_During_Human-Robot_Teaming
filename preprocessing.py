@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import mne
-matplotlib.use('TkAgg')
+# matplotlib.use('TkAgg')
 
 class Filtering:
     def __init__(self, raw, l_freq, h_freq, nf_freqs=(60,120)):
