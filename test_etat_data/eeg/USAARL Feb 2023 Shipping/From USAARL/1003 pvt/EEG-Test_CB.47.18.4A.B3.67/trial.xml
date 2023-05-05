@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<trial>
+   <id>20230316_1512_005</id>
+   <utc>1678997535.053</utc>
+   <created>16-Mar-2023 15:12:15</created>
+   <timezone>CDT</timezone>
+   <tz_offset>-18000</tz_offset>
+   <tz_offset_raw>-21600</tz_offset_raw>
+   <num>5</num>
+   <day>9</day>
+   <practice>0</practice>
+   <pre_mood>1</pre_mood>
+   <post_mood>3</post_mood>
+   <status>0</status>
+   <app>
+      <root>C:\pc-pvt-bin-2.0.4\data</root>
+      <version>2.0.4</version>
+      <study>ETattoo</study>
+      <pvt_args/>
+      <sn>9999</sn>
+      <demo>0</demo>
+      <analysis>
+         <anticipation>100</anticipation>
+         <deadline>3000</deadline>
+         <minor_lapse>500</minor_lapse>
+         <major_lapse>1000</major_lapse>
+      </analysis>
+   </app>
+   <study>
+      <name>ETattoo</name>
+      <created>08-Mar-2023 08:35:18</created>
+      <owner/>
+      <desc/>
+      <ntrials>100</ntrials>
+      <rate>1</rate>
+      <mood>How sleepy are you? (1 = not at all, 10 = very)</mood>
+      <isi>
+         <min>2</min>
+         <max>10</max>
+         <step>0.001</step>
+      </isi>
+      <ttt>600</ttt>
+      <subject>test</subject>
+      <subject_day1>08-Mar-2023</subject_day1>
+      <schedules_file/>
+      <schedules>
+         <name/>
+      </schedules>
+      <schedule_errors>
+         <name/>
+      </schedule_errors>
+      <nextid>1</nextid>
+      <analysis>
+         <anticipation/>
+         <deadline/>
+         <minor_lapse/>
+         <major_lapse/>
+      </analysis>
+      <update_predictions>0</update_predictions>
+   </study>
+   <subject>
+      <id>test</id>
+      <day1>08-Mar-2023</day1>
+      <created>08-Mar-2023 08:35:34</created>
+      <hand>right</hand>
+      <day1_utc>1678255200</day1_utc>
+      <schedule>Unknown</schedule>
+      <info/>
+      <ntrials>5</ntrials>
+      <update_predictions>0</update_predictions>
+   </subject>
+</trial>

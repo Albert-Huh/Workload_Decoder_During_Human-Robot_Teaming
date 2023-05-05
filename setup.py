@@ -2,24 +2,56 @@ import sys
 import os
 from sqlite3 import Row
 import numpy as np
-from datetime import datetime, date, time, timedelta
+from datetime import datetime, date, time, timedelta, timezone
 import matplotlib
 import matplotlib.pyplot as plt
 import read_nback_report as nback
 import read_hrt_report as hrt
+import pytz
 
 import mne
 # matplotlib.use('TkAgg')
 
 class Setup:
-    def __init__(self, raw_path=None, montage_path=None, mode=None):
+    def __init__(self, raw_path=None, montage_path=None, mode=None, clock_correction=None):
+        '''
+        clock_correction: timedelta object between recorded .tat file recording START time to CST. only needed for USAARL E-tattoo mode
+        '''
         if mode == 'Binary':
             self.raw = mne.io.read_raw_fif(raw_path)
+        elif mode == 'USAARL E-tattoo':
+            fs = 250 
+            ch_names = ["F7", "Fp1", "Fp2", "F8", "EOGh", "EOGv"]
+            csv_file = raw_path
+
+            try:
+                date_string = raw_path.split('\\')[-1].split('.csv')[0]
+                date_string = date_string.replace("CST", "").strip()
+                date_format = "%a %b %d %H%M%S %Y"
+                meas_date = datetime.strptime(date_string, date_format) + clock_correction
+            except ValueError:
+                date_string = "2023-01-19 23:21:27"
+                date_format = "%Y-%m-%d %H:%M:%S"
+                meas_date = datetime.strptime(date_string, date_format) + clock_correction
+
+            cst_timezone = pytz.timezone("America/Chicago")
+            meas_date = cst_timezone.localize(meas_date)
+            meas_date = meas_date.astimezone(timezone.utc)
+
+            data = np.loadtxt(csv_file, delimiter=',')
+            data = data[:, 1:]  # disregard the first column (timestamps)
+            info = mne.create_info(ch_names, fs, ch_types=["eeg","eeg","eeg","eeg","eog","eog"])
+            self.raw = mne.io.RawArray(data.T, info)
+            self.raw.set_meas_date(meas_date)
         else:
             self.raw = mne.io.read_raw_brainvision(raw_path)
-        self.montage = mne.channels.read_custom_montage(montage_path)
+        if montage_path:
+            self.montage = mne.channels.read_custom_montage(montage_path)
         self.mode = mode # 'Binary', 'Brainvision' 'Dual'
-        self.raw.set_channel_types({'EOG':'eog'})
+
+        if mode != 'USAARL E-tattoo':
+            self.raw.set_channel_types({'EOG':'eog'})
+
         if mode == 'Dual':
             self.bv_raw = self.raw.copy().pick_channels(['Fp1','Fp2','Fz','F3','F4','F7','F8','Cz','C3','C4','T7','T8','Pz','P3','P4','P7','P8','O1','O2','EOG'])
             self.et_raw = self.raw.copy().pick_channels(['Fp1_ET','Fp2_ET','F7_ET','F8_ET','A1','A2','EOG'])
@@ -38,7 +70,9 @@ class Setup:
             self.et_raw = self.raw.copy().pick_channels(['Fp1','Fp2','F7','F8','A1','EOG'])
         elif mode == 'Brainvision':
             self.raw.set_montage(self.montage)
-            # pass
+        else:
+            pass
+
 
     def get_brainvision_raw(self):
         self.bv_raw = self.raw.copy().pick_channels(['Fp1','Fp2','Fz','F3','F4','F7','F8','Cz','C3','C4','T7','T8','Pz','P3','P4','P7','P8','O1','O2','EOG'])
@@ -88,6 +122,8 @@ class Setup:
         meas_isodate = datetime.fromisoformat(str(self.raw.info['meas_date']))
         # fs = self.raw.info['sfreq']
         samplestamp_tdel = nback.get_stim_time_delta(nback_report, meas_isodate, fs)
+        print(nback_report['nback'])
+        print(len(nback_report['nback']))
         nback_event = nback.get_nback_event(nback_report, samplestamp_tdel, fs)
         return nback_event
 

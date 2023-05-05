@@ -1,0 +1,221 @@
+20230406_094815_S1001_2
+Subject1001
+Session2
+Age: 29
+Gender: M
+1-Back
+Alpha Sequence [24, 20, 0, 0, 0, 11, 11, 23, 22, 19, 19, 13, 2, 2, 8, 19, 16, 17, 9, 15]
+Alpha Answer [False, False, False, True, True, False, True, False, False, False, True, False, False, True, False, False, False, False, False, False]
+Position Sequence [6, 3, 6, 2, 4, 2, 2, 9, 2, 9, 3, 9, 7, 3, 6, 2, 2, 4, 3, 5]
+Position Answer [False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, True, False, False, False]
+Instruction: 0.1459670066833496
+Fixation: 4.922888278961182
+Timestamp before stimuli: 09:49:03.723167
+User Input Alpha: [False, False, True, True, True, False, True, False, False, False, True, False, False, True, False, False, False, False, False, False]
+User Input Position: [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+Stimuli: 40.162747621536255
+Fixation: 4.997700452804565
+Correct, Missed, False Alarm 
+5, 2, 1
+Success Rate: 62.5
+Results: 4.998927354812622
+Overall Run Time: 55.28335499763489
+
+0-Back
+Alpha Sequence [22, 20, 1, 14, 0, 21, 4, 7, 10, 18, 24, 23, 0, 20, 10, 10, 7, 8, 13, 4]
+Alpha Answer [False, False, False, False, False, False, False, False, True, False, False, False, False, False, True, True, False, False, False, False]
+Position Sequence [2, 8, 7, 9, 5, 7, 9, 7, 8, 7, 1, 8, 2, 2, 6, 8, 5, 2, 2, 2]
+Position Answer [False, True, False, False, False, False, False, False, True, False, False, True, False, False, False, True, False, False, False, False]
+Instruction: 9.746970415115356
+Fixation: 4.939371347427368
+Timestamp before stimuli: 09:50:10.638620
+User Input Alpha: [False, False, False, False, False, False, False, False, True, False, False, False, True, False, True, True, False, False, False, False]
+User Input Position: [False, True, False, False, False, False, False, False, False, False, False, True, False, False, False, False, True, False, False, False]
+Stimuli: 40.19751811027527
+Fixation: 4.997473955154419
+Correct, Missed, False Alarm 
+5, 2, 2
+Success Rate: 55.55555555555556
+Results: 4.999249696731567
+Overall Run Time: 64.93716144561768
+
+0-Back
+Alpha Sequence [6, 0, 1, 17, 24, 21, 10, 22, 25, 7, 16, 24, 16, 18, 21, 21, 21, 8, 21, 20]
+Alpha Answer [False, False, False, False, False, True, False, False, False, False, False, False, False, False, True, True, True, False, True, False]
+Position Sequence [2, 3, 7, 2, 2, 6, 2, 1, 6, 6, 5, 2, 4, 3, 3, 8, 3, 9, 1, 6]
+Position Answer [False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False]
+Instruction: 22.215392589569092
+Fixation: 4.926609516143799
+Timestamp before stimuli: 09:51:28.042610
+User Input Alpha: [False, False, False, False, False, True, False, False, False, False, False, False, False, False, True, True, True, False, True, False]
+User Input Position: [False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False]
+Stimuli: 40.16404390335083
+Fixation: 4.996033430099487
+Correct, Missed, False Alarm 
+6, 0, 0
+Success Rate: 100.0
+Results: 4.998704671859741
+Overall Run Time: 77.35906100273132
+
+1-Back
+Alpha Sequence [12, 23, 6, 21, 18, 13, 18, 20, 8, 23, 7, 21, 15, 4, 3, 0, 0, 24, 22, 22]
+Alpha Answer [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, True]
+Position Sequence [2, 2, 5, 7, 1, 1, 5, 4, 3, 5, 5, 4, 7, 4, 1, 5, 3, 8, 3, 4]
+Position Answer [False, True, False, False, False, True, False, False, False, False, True, False, False, False, False, False, False, False, False, False]
+Instruction: 5.5446741580963135
+Fixation: 4.9240639209747314
+Timestamp before stimuli: 09:52:28.739715
+User Input Alpha: [False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False, True, False, False, True]
+User Input Position: [False, True, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False, False, False, False]
+Stimuli: 40.16716027259827
+Fixation: 4.991949081420898
+Correct, Missed, False Alarm 
+4, 1, 1
+Success Rate: 66.66666666666667
+Results: 4.998989582061768
+Overall Run Time: 60.6839439868927
+
+0-Back
+Alpha Sequence [3, 18, 24, 0, 10, 0, 25, 18, 20, 19, 0, 7, 22, 9, 19, 21, 15, 11, 9, 0]
+Alpha Answer [False, False, False, True, False, True, False, False, False, False, True, False, False, False, False, False, False, False, False, True]
+Position Sequence [6, 2, 4, 6, 1, 8, 8, 6, 1, 2, 9, 6, 5, 8, 7, 1, 6, 4, 4, 1]
+Position Answer [True, False, False, True, False, False, False, True, False, False, False, True, False, False, False, False, True, False, False, False]
+Instruction: 8.173601150512695
+Fixation: 4.927150249481201
+Timestamp before stimuli: 09:53:33.602754
+User Input Alpha: [False, False, False, True, False, True, False, False, False, False, True, False, False, False, False, False, False, False, False, True]
+User Input Position: [True, False, False, True, False, False, False, True, False, False, False, True, False, False, False, False, True, False, False, False]
+Stimuli: 40.18034076690674
+Fixation: 4.995388031005859
+Correct, Missed, False Alarm 
+9, 0, 0
+Success Rate: 100.0
+Results: 4.999317646026611
+Overall Run Time: 63.33533239364624
+
+1-Back
+Alpha Sequence [12, 7, 3, 21, 10, 25, 2, 20, 23, 19, 24, 24, 4, 12, 25, 0, 0, 8, 22, 22]
+Alpha Answer [False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, True, False, False, True]
+Position Sequence [6, 5, 2, 5, 8, 4, 2, 8, 7, 4, 5, 6, 5, 8, 9, 3, 1, 7, 2, 1]
+Position Answer [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+Instruction: 7.281534910202026
+Fixation: 4.925936222076416
+Timestamp before stimuli: 09:54:40.016314
+User Input Alpha: [False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, True, False, False, True]
+User Input Position: [False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, False, False]
+Stimuli: 40.22320747375488
+Fixation: 4.994682788848877
+Correct, Missed, False Alarm 
+3, 0, 1
+Success Rate: 75.0
+Results: 4.9996702671051025
+Overall Run Time: 62.48440217971802
+
+0-Back
+Alpha Sequence [22, 20, 20, 17, 6, 9, 12, 11, 19, 20, 19, 17, 5, 16, 5, 19, 12, 17, 21, 0]
+Alpha Answer [False, False, False, True, False, False, False, False, False, False, False, True, False, False, False, False, False, True, False, False]
+Position Sequence [7, 8, 6, 5, 9, 7, 8, 6, 2, 5, 9, 1, 9, 9, 5, 8, 6, 1, 2, 5]
+Position Answer [True, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+Instruction: 9.048177480697632
+Fixation: 4.922475099563599
+Timestamp before stimuli: 09:55:46.764007
+User Input Alpha: [False, False, False, True, False, False, False, False, False, False, False, True, False, False, False, False, False, True, False, False]
+User Input Position: [True, False, False, False, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False]
+Stimuli: 40.18123006820679
+Fixation: 4.9954993724823
+Correct, Missed, False Alarm 
+5, 0, 0
+Success Rate: 100.0
+Results: 4.998647212982178
+Overall Run Time: 64.20359659194946
+
+1-Back
+Alpha Sequence [22, 9, 10, 6, 14, 15, 18, 0, 0, 0, 0, 10, 13, 11, 13, 8, 18, 21, 12, 4]
+Alpha Answer [False, False, False, False, False, False, False, False, True, True, True, False, False, False, False, False, False, False, False, False]
+Position Sequence [1, 3, 1, 3, 6, 6, 9, 9, 5, 7, 4, 2, 5, 4, 8, 9, 4, 3, 8, 4]
+Position Answer [False, False, False, False, False, True, False, True, False, False, False, False, False, False, False, False, False, False, False, False]
+Instruction: 4.255007028579712
+Fixation: 4.925198793411255
+Timestamp before stimuli: 09:56:46.189523
+User Input Alpha: [False, False, False, False, False, False, False, False, False, True, True, False, False, False, False, False, False, False, False, False]
+User Input Position: [False, False, False, False, False, False, True, True, False, False, False, False, False, False, False, False, False, False, False, False]
+Stimuli: 40.17451858520508
+Fixation: 4.993180274963379
+Correct, Missed, False Alarm 
+3, 2, 1
+Success Rate: 50.0
+Results: 4.998863697052002
+Overall Run Time: 59.403188943862915
+
+0-Back
+Alpha Sequence [13, 13, 13, 18, 6, 4, 13, 13, 24, 13, 21, 18, 12, 22, 2, 13, 17, 3, 2, 12]
+Alpha Answer [True, True, True, False, False, False, True, True, False, True, False, False, False, False, False, True, False, False, False, False]
+Position Sequence [3, 6, 9, 9, 7, 4, 7, 6, 2, 2, 3, 4, 9, 2, 8, 1, 3, 4, 3, 8]
+Position Answer [False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, True]
+Instruction: 11.458484649658203
+Fixation: 4.926578044891357
+Timestamp before stimuli: 09:57:52.813905
+User Input Alpha: [True, True, True, False, False, False, True, True, False, True, False, False, False, False, False, True, False, False, False, False]
+User Input Position: [False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, True]
+Stimuli: 40.18391680717468
+Fixation: 4.990239143371582
+Correct, Missed, False Alarm 
+9, 0, 0
+Success Rate: 100.0
+Results: 4.999267339706421
+Overall Run Time: 66.6175491809845
+
+1-Back
+Alpha Sequence [8, 17, 2, 4, 1, 1, 2, 7, 19, 23, 0, 17, 10, 24, 24, 6, 22, 11, 11, 11]
+Alpha Answer [False, False, False, False, False, True, False, False, False, False, False, False, False, False, True, False, False, False, True, True]
+Position Sequence [9, 9, 5, 5, 7, 6, 2, 4, 6, 4, 4, 2, 3, 5, 3, 1, 1, 1, 7, 9]
+Position Answer [False, True, False, True, False, False, False, False, False, False, True, False, False, False, False, False, True, True, False, False]
+Instruction: 6.79199743270874
+Fixation: 4.926540851593018
+Timestamp before stimuli: 09:58:57.677219
+User Input Alpha: [False, False, False, False, False, True, False, False, False, False, False, False, False, False, True, False, False, False, True, True]
+User Input Position: [False, True, False, True, False, False, False, False, False, False, True, False, False, False, False, False, True, True, False, False]
+Stimuli: 40.15604329109192
+Fixation: 4.998538017272949
+Correct, Missed, False Alarm 
+9, 0, 0
+Success Rate: 100.0
+Results: 4.99889063835144
+Overall Run Time: 61.93368935585022
+
+2-Back
+Alpha Sequence [17, 21, 6, 1, 24, 2, 15, 14, 25, 6, 2, 9, 19, 9, 19, 8, 8, 8, 3, 22]
+Alpha Answer [False, False, False, False, False, False, False, False, False, False, False, False, False, True, True, False, False, True, False, False]
+Position Sequence [2, 8, 8, 5, 4, 7, 9, 6, 7, 2, 5, 9, 8, 7, 1, 4, 7, 4, 5, 7]
+Position Answer [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False]
+Instruction: 10.39299750328064
+Fixation: 4.931763172149658
+Timestamp before stimuli: 10:00:03.225840
+User Input Alpha: [False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, False, False, True, False, False]
+User Input Position: [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True]
+Stimuli: 40.226258277893066
+Fixation: 4.992190361022949
+Correct, Missed, False Alarm 
+1, 3, 2
+Success Rate: 16.666666666666668
+Results: 4.99979305267334
+Overall Run Time: 65.6025288105011
+
+1-Back
+Alpha Sequence [19, 25, 12, 22, 0, 0, 20, 20, 21, 3, 2, 21, 13, 5, 9, 22, 8, 1, 5, 5]
+Alpha Answer [False, False, False, False, False, True, False, True, False, False, False, False, False, False, False, False, False, False, False, True]
+Position Sequence [1, 6, 7, 3, 4, 4, 4, 4, 8, 1, 7, 1, 8, 1, 5, 8, 7, 8, 4, 5]
+Position Answer [False, False, False, False, False, True, True, True, False, False, False, False, False, False, False, False, False, False, False, False]
+Instruction: 7.453984975814819
+Fixation: 4.920931816101074
+Timestamp before stimuli: 10:01:15.293231
+User Input Alpha: [False, False, False, False, False, True, False, True, False, False, False, False, False, False, False, False, False, False, False, True]
+User Input Position: [False, False, False, False, False, False, True, True, False, False, False, False, False, False, False, False, False, False, False, False]
+Stimuli: 40.168874740600586
+Fixation: 4.995452404022217
+Correct, Missed, False Alarm 
+5, 1, 0
+Success Rate: 83.33333333333333
+Results: 4.999339818954468
+Overall Run Time: 62.59814238548279
+
