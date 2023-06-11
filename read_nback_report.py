@@ -14,6 +14,7 @@ def read_report_txt(path):
 
 def get_key_string():
     # Get the list of indication stings to extract data
+    string_nback = '-Back'
     string_timestamp = 'Timestamp before stimuli: '
     string_alpha = 'Alpha Sequence '
     string_alpha_solution = 'Alpha Answer '
@@ -21,16 +22,16 @@ def get_key_string():
     string_position = 'Position Sequence '
     string_position_solution = 'Position Answer '
     string_position_user = 'User Input Position: '
-    key_string_list = [string_timestamp, string_alpha, string_position, string_alpha_solution, string_position_solution, string_alpha_user, string_position_user]
+    key_string_list = [string_nback, string_timestamp, string_alpha, string_position, string_alpha_solution, string_position_solution, string_alpha_user, string_position_user]
     return key_string_list
 
 def get_report_data(lines, key_string_list):
     # Get the list of Nback sequence
-    nback_sequence = lines[0]
-    sequence = [int(s) for s in list(nback_sequence) if s.isdigit()]
+    # nback_sequence = lines[0]
+    # sequence = [int(s) for s in list(nback_sequence) if s.isdigit()]
     # Create report dict data object
     report = {}
-    report['nback'] = sequence
+    report['nback'] = []
     report['stim_timestamp'] = []
     report['stim_alphabet'] = []
     report['stim_position'] = []
@@ -38,7 +39,7 @@ def get_report_data(lines, key_string_list):
     report['sol_position'] = []
     report['user_alphabet'] = []
     report['user_position'] = []
-    key_ind = ['stim_timestamp','stim_alphabet','stim_position','sol_alphabet','sol_position','user_alphabet','user_position']
+    key_ind = ['nback','stim_timestamp','stim_alphabet','stim_position','sol_alphabet','sol_position','user_alphabet','user_position']
 
     line_idx = 0
     flag = 0
@@ -51,13 +52,16 @@ def get_report_data(lines, key_string_list):
         for string in key_string_list:
             if string in line:
                 if str_idx == 0:
+                    n = [int(s) for s in list(line) if s.isdigit()]
+                    report[key_ind[str_idx]].append(n[0])
+                elif str_idx == 1:
                     stamp = []
                     line_timestamps.append(line_idx)
                     stamp = line.split(': ',1)[1]
                     timestamps.append(stamp)
                     report[key_ind[str_idx]].append(stamp)
                     flag = 1
-                elif str_idx == 1 or str_idx == 2:
+                elif str_idx == 2 or str_idx == 3:
                     lst = line.split('[',1)[1].replace(']','').split(', ')
                     lst = [int(s) for s in lst]
                     report[key_ind[str_idx]].append(lst)
