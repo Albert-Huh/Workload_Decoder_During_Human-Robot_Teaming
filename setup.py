@@ -27,9 +27,10 @@ class Setup:
             try:
                 date_string = raw_path.split('\\')[-1].split('.csv')[0]
                 date_string = date_string.replace("CST", "").strip()
-                date_format = "%a %b %d %H%M%S %Y"
+                date_string = date_string.split(r"/")[-1]
+                date_format = "%a %b %d %H%M%S  %Y"
                 meas_date = datetime.strptime(date_string, date_format) + clock_correction
-            except ValueError:
+            except ValueError:  # temporary for subject 1003 
                 date_string = "2023-01-19 23:21:27"
                 date_format = "%Y-%m-%d %H:%M:%S"
                 meas_date = datetime.strptime(date_string, date_format) + clock_correction
@@ -43,6 +44,8 @@ class Setup:
             info = mne.create_info(ch_names, fs, ch_types=["eeg","eeg","eeg","eeg","eog","eog"])
             self.raw = mne.io.RawArray(data.T, info)
             self.raw.set_meas_date(meas_date)
+            print("set:")
+            print(meas_date)
         else:
             self.raw = mne.io.read_raw_brainvision(raw_path)
         if montage_path:
@@ -115,13 +118,13 @@ class Setup:
         events = mne.find_events(self.raw, stim_channel=stim_channel)
         return events
 
-    def get_events_from_nback_report(self, report_path, fs):
+    def get_events_from_nback_report(self, report_path, fs, usaarl=False):
         lines = nback.read_report_txt(report_path)
         key_string_list = nback.get_key_string()
         nback_report = nback.get_report_data(lines, key_string_list)
         meas_isodate = datetime.fromisoformat(str(self.raw.info['meas_date']))
         # fs = self.raw.info['sfreq']
-        samplestamp_tdel = nback.get_stim_time_delta(nback_report, meas_isodate, fs)
+        samplestamp_tdel = nback.get_stim_time_delta(nback_report, meas_isodate, fs, usaarl=usaarl)
         print(nback_report['nback'])
         print(len(nback_report['nback']))
         nback_event = nback.get_nback_event(nback_report, samplestamp_tdel, fs)

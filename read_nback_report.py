@@ -77,13 +77,17 @@ def get_report_data(lines, key_string_list):
         print('The key string for stim timestamps were found in line', line_timestamps)
     return report
 
-def get_stim_time_delta(report, meas_isodate, fs):
+def get_stim_time_delta(report, meas_isodate, fs, usaarl=False):
     # Get time delta between recording meas_timestamp and stim_timestamps
     meas_time = meas_isodate.time()
     meas_date = meas_isodate.date()
     timestamp_tdel = []
     for i in report['stim_timestamp']:
-        tdel = datetime.combine(meas_date, time.fromisoformat(i)) - datetime.combine(meas_date, meas_time)
+        if usaarl:
+            stimulus_time = (datetime.combine(date(1,1,1),time.fromisoformat(i)) + timedelta(hours=5)).time()  # just adds 5 hours (CST to UTC) to match the actual time in UTC set in MNE
+        else:
+            stimulus_time = time.fromisoformat(i)
+        tdel = datetime.combine(meas_date, stimulus_time) - datetime.combine(meas_date, meas_time)
         t = tdel.total_seconds()//(1/fs)
         timestamp_tdel.append(t)
     return timestamp_tdel
